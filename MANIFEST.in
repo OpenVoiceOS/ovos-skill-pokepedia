@@ -1,0 +1,9 @@
+include README.md
+include CHANGELOG.md
+include LICENSE
+include requirements.txt
+recursive-include ovos_skill_pokepedia *.py
+recursive-include ovos_skill_pokepedia *.json
+recursive-include ovos_skill_pokepedia *.voc
+recursive-include ovos_skill_pokepedia *.dialog
+recursive-include ovos_skill_pokepedia *.intent

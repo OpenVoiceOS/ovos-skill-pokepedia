@@ -1,0 +1,4 @@
+pokepy>=2.1.0
+ovos-utils>=0.1.0
+ovos-workshop>=0.1.0
+requests>=2.28.0
