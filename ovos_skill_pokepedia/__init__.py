@@ -3,7 +3,7 @@ OVOS Pokémon Battle Assistant Skill
 Child-friendly voice skill for querying Pokémon data and battle predictions.
 """
 
-import os
+import requests
 from functools import lru_cache
 
 from ovos_utils import classproperty
@@ -12,20 +12,6 @@ from ovos_workshop.intents import IntentBuilder
 from ovos_utils.process_utils import RuntimeRequirements
 from ovos_workshop.decorators import intent_handler
 from ovos_workshop.skills import OVOSSkill
-
-try:
-    import pokepy
-except ImportError:
-    LOG.warning("pokepy not installed - Pokémon features unavailable")
-    pokepy = None
-
-
-VERSION_MAJOR = 0
-VERSION_MINOR = 1
-VERSION_BUILD = 0
-VERSION_ALPHA = 0
-# END_VERSION_BLOCK
-
 
 # Type advantage map - simplified for children
 TYPE_ADVANTAGES = {
@@ -95,36 +81,47 @@ class PokemonPokeAPIError(Exception):
 class PokeAPIClient:
     """Wrapper client for PokeAPI with caching."""
 
-    def __init__(self, use_cache: bool = True):
-        if pokepy is None:
-            raise PokemonPokeAPIError("pokepy library not installed")
+    BASE_URL = "https://pokeapi.co/api/v2"
+    TIMEOUT = 10
 
-        cache = "in_memory" if use_cache else None
-        self._client = pokepy.V2Client(cache=cache)
-
-    def get_pokemon(self, name: str):
+    @lru_cache(maxsize=100)
+    def get_pokemon(self, name: str) -> dict:
         """Fetch Pokémon by name (case-insensitive)."""
-        return self._client.get_pokemon(name.lower())
+        response = requests.get(
+            f"{self.BASE_URL}/pokemon/{name.lower()}", timeout=self.TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
 
-    def get_type(self, type_name: str):
+    def get_type(self, type_name: str) -> dict:
         """Fetch type by name."""
-        return self._client.get_type(type_name.lower())
+        response = requests.get(
+            f"{self.BASE_URL}/type/{type_name.lower()}", timeout=self.TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
 
-    def get_move(self, move_name: str):
+    def get_move(self, move_name: str) -> dict:
         """Fetch move by name."""
-        return self._client.get_move(move_name.lower())
+        response = requests.get(
+            f"{self.BASE_URL}/move/{move_name.lower()}", timeout=self.TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
 
-    def get_ability(self, ability_name: str):
+    def get_ability(self, ability_name: str) -> dict:
         """Fetch ability by name."""
-        return self._client.get_ability(ability_name.lower())
+        response = requests.get(
+            f"{self.BASE_URL}/ability/{ability_name.lower()}", timeout=self.TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
 
 
 def create_api_client() -> "PokeAPIClient | None":
     """Factory to create API client with error handling."""
-    if pokepy is None:
-        return None
     try:
-        return PokeAPIClient(use_cache=True)
+        return PokeAPIClient()
     except Exception as e:
         LOG.error(f"Failed to create PokeAPI client: {e}")
         return None
@@ -133,7 +130,7 @@ def create_api_client() -> "PokeAPIClient | None":
 def get_type_advantage(attack_type: str, defend_type: str) -> str:
     """
     Get simplified type advantage explanation for children.
-    Returns Italian explanation string.
+    Returns English keys for translation.
     """
     attack = attack_type.lower()
     defend = defend_type.lower()
@@ -141,67 +138,32 @@ def get_type_advantage(attack_type: str, defend_type: str) -> str:
     advantages = TYPE_ADVANTAGES.get(attack, {})
 
     if defend in advantages.get("strong_against", []):
-        return "molto efficace"
+        return "very_effective"
     elif defend in advantages.get("weak_to", []):
-        return "non molto efficace"
-    return "neutro"
+        return "not_effective"
+    return "neutral"
 
 
-def format_stat_childfriendly(stat_name: str, value: int) -> str:
-    """Convert stat to child-friendly Italian description."""
-    stat_map = {
-        "hp": "punti vita",
-        "attack": "attacco",
-        "defense": "difesa",
-        "special-attack": "attacco speciale",
-        "special-defense": "difesa speciale",
-        "speed": "velocità",
-    }
-
-    name = stat_map.get(stat_name, stat_name)
-
+def format_stat_childfriendly(value: int) -> str:
+    """Convert stat to child-friendly tier key."""
     if value >= 120:
-        return f"un {name} fortissimo"
+        return "very_strong"
     elif value >= 100:
-        return f"un {name} molto forte"
+        return "strong"
     elif value >= 80:
-        return f"un buon {name}"
+        return "normal"
     elif value >= 60:
-        return f"un {name} normale"
+        return "weak"
     elif value >= 40:
-        return f"un {name} debole"
+        return "very_weak"
     else:
-        return f"un {name} molto debole"
+        return "very_weak"
 
 
-def format_types_childfriendly(types: list) -> str:
-    """Format types list for children in Italian."""
-    type_map = {
-        "fire": "Fuoco",
-        "water": "Acqua",
-        "grass": "Erba",
-        "electric": "Elettrico",
-        "ice": "Ghiaccio",
-        "fighting": "Lotta",
-        "poison": "Veleno",
-        "ground": "Terra",
-        "flying": "Volante",
-        "psychic": "Psico",
-        "bug": "Coleottero",
-        "ghost": "Spettro",
-        "dragon": "Drago",
-        "steel": "Acciaio",
-        "fairy": "Folletto",
-        "normal": "Normale",
-        "dark": "Buio",
-        "rock": "Roccia",
-    }
-
-    italian_types = [type_map.get(t, t.capitalize()) for t in types]
-
-    if len(italian_types) == 1:
-        return italian_types[0]
-    return f"{italian_types[0]} e {italian_types[1]}"
+def format_types_childfriendly(types: list) -> list:
+    """Format types list for children (lowercase English)."""
+    # Return lowercase English type names
+    return [t.lower() for t in types]
 
 
 class PokemonSkill(OVOSSkill):
@@ -227,6 +189,8 @@ class PokemonSkill(OVOSSkill):
 
     def initialize(self):
         self.api_client = create_api_client()
+        if self.api_client is None:
+            LOG.error("Failed to create PokeAPI client")
         LOG.info("PokemonSkill initialized")
 
     @intent_handler(
@@ -238,21 +202,31 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.no.pokemon")
             return
 
+        if self.api_client is None:
+            self.speak_dialog("error.not.found")
+            return
+
         try:
             pokemon = self.api_client.get_pokemon(pokemon_name)
 
-            stats = {s.stat.name: s.base_stat for s in pokemon.stats}
-            types = [t.type.name for t in pokemon.types]
-            abilities = [a.ability.name for a in pokemon.abilities]
+            stats = {s["stat"]["name"]: s["base_stat"] for s in pokemon["stats"]}
+            types = [t["type"]["name"] for t in pokemon["types"]]
 
-            attack_desc = format_stat_childfriendly("attack", stats.get("attack", 0))
-            speed_desc = format_stat_childfriendly("speed", stats.get("speed", 0))
-            types_desc = format_types_childfriendly(types)
+            attack_tier = format_stat_childfriendly(stats.get("attack", 0))
+            speed_tier = format_stat_childfriendly(stats.get("speed", 0))
+            types_list = format_types_childfriendly(types)
+
+            # Translate types
+            types_desc = " and ".join(self._translate(t) for t in types_list)
+            # Translate stat tiers
+            attack_desc = self._translate(attack_tier)
+            speed_desc = self._translate(speed_tier)
 
             self.speak_dialog(
                 "pokemon.info",
                 {
-                    "pokemon_name": pokemon.name.capitalize(),
+                    "pokemon_name": pokemon["name"].capitalize(),
+                    "pokedex_number": pokemon["id"],
                     "types": types_desc,
                     "attack_desc": attack_desc,
                     "speed_desc": speed_desc,
@@ -272,12 +246,19 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.no.pokemon")
             return
 
+        if self.api_client is None:
+            self.speak_dialog("error.not.found")
+            return
+
         try:
             pokemon = self.api_client.get_pokemon(pokemon_name)
 
-            moves = [m.move.name.replace("-", " ").title() for m in pokemon.moves[:5]]
+            moves = [
+                m["move"]["name"].replace("-", " ").title()
+                for m in pokemon["moves"][:5]
+            ]
             moves_str = (
-                ", ".join(moves[:-1]) + " e " + moves[-1]
+                ", ".join(moves[:-1]) + " and " + moves[-1]
                 if len(moves) > 1
                 else moves[0]
             )
@@ -285,7 +266,7 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog(
                 "pokemon.moves",
                 {
-                    "pokemon_name": pokemon.name.capitalize(),
+                    "pokemon_name": pokemon["name"].capitalize(),
                     "moves": moves_str,
                 },
             )
@@ -303,37 +284,47 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.no.pokemon")
             return
 
+        if self.api_client is None:
+            self.speak_dialog("error.not.found")
+            return
+
         try:
             pokemon = self.api_client.get_pokemon(pokemon_name)
 
-            types = [t.type.name for t in pokemon.types]
-            types_desc = format_types_childfriendly(types)
+            types = [t["type"]["name"] for t in pokemon["types"]]
+            types_list = format_types_childfriendly(types)
 
             explanation = []
             for t in types:
                 advantages = TYPE_ADVANTAGES.get(t, {})
                 if advantages.get("strong_against"):
+                    # Use mapping for translation keys (instead of hardcoded Italian)
                     type_map = {
-                        "fire": "Erba",
-                        "water": "Fuoco",
-                        "grass": "Acqua",
-                        "electric": "Acqua",
-                        "ice": "Erba",
-                        "fighting": "Normale",
+                        "fire": "grass",
+                        "water": "fire",
+                        "grass": "water",
+                        "electric": "water",
+                        "ice": "grass",
+                        "fighting": "normal",
                     }
-                    strong = type_map.get(t, t.capitalize())
-                    explanation.append(f"forte contro {strong}")
+                    strong = type_map.get(t, t)
+                    explanation.append(f"strong_against_{strong}")
 
-            explanation_str = (
-                ". ".join(explanation) if explanation else "Non ha vantaggi specifici"
+            # Translate types
+            types_desc = " and ".join(self._translate(t) for t in types_list)
+            # Translate explanation keys
+            explanation_translated = (
+                ". ".join(self._translate(exp) for exp in explanation)
+                if explanation
+                else self._translate("no_specific_advantages")
             )
 
             self.speak_dialog(
                 "pokemon.type",
                 {
-                    "pokemon_name": pokemon.name.capitalize(),
+                    "pokemon_name": pokemon["name"].capitalize(),
                     "types": types_desc,
-                    "explanation": explanation_str,
+                    "explanation": explanation_translated,
                 },
             )
 
@@ -355,15 +346,19 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.battle")
             return
 
+        if self.api_client is None:
+            self.speak_dialog("error.not.found")
+            return
+
         try:
             pkmn_a = self.api_client.get_pokemon(pokemon_a)
             pkmn_b = self.api_client.get_pokemon(pokemon_b)
 
-            stats_a = {s.stat.name: s.base_stat for s in pkmn_a.stats}
-            stats_b = {s.stat.name: s.base_stat for s in pkmn_b.stats}
+            stats_a = {s["stat"]["name"]: s["base_stat"] for s in pkmn_a["stats"]}
+            stats_b = {s["stat"]["name"]: s["base_stat"] for s in pkmn_b["stats"]}
 
-            types_a = [t.type.name for t in pkmn_a.types]
-            types_b = [t.type.name for t in pkmn_b.types]
+            types_a = [t["type"]["name"] for t in pkmn_a["types"]]
+            types_b = [t["type"]["name"] for t in pkmn_b["types"]]
 
             total_a = sum(stats_a.values())
             total_b = sum(stats_b.values())
@@ -374,37 +369,41 @@ class PokemonSkill(OVOSSkill):
             for ta in types_a:
                 for tb in types_b:
                     result = get_type_advantage(ta, tb)
-                    if result == "molto efficace":
+                    if result == "very_effective":
                         type_advantage_a += 1
-                    elif result == "non molto efficace":
+                    elif result == "not_effective":
                         type_advantage_a -= 1
 
             for tb in types_b:
                 for ta in types_a:
                     result = get_type_advantage(tb, ta)
-                    if result == "molto efficace":
+                    if result == "very_effective":
                         type_advantage_b += 1
-                    elif result == "non molto efficace":
+                    elif result == "not_effective":
                         type_advantage_b -= 1
 
             score_a = total_a + (type_advantage_a * 20)
             score_b = total_b + (type_advantage_b * 20)
 
             if score_a > score_b + 30:
-                winner = pkmn_a.name.capitalize()
+                winner = pkmn_a["name"].capitalize()
             elif score_b > score_a + 30:
-                winner = pkmn_b.name.capitalize()
+                winner = pkmn_b["name"].capitalize()
             else:
-                winner = "dipende dal tipo di mosse"
+                winner = self._translate("depends_on_moves")
 
-            types_a_desc = format_types_childfriendly(types_a)
-            types_b_desc = format_types_childfriendly(types_b)
+            types_a_list = format_types_childfriendly(types_a)
+            types_b_list = format_types_childfriendly(types_b)
+
+            # Translate types
+            types_a_desc = " and ".join(self._translate(t) for t in types_a_list)
+            types_b_desc = " and ".join(self._translate(t) for t in types_b_list)
 
             self.speak_dialog(
                 "battle.result",
                 {
-                    "pokemon_a": pkmn_a.name.capitalize(),
-                    "pokemon_b": pkmn_b.name.capitalize(),
+                    "pokemon_a": pkmn_a["name"].capitalize(),
+                    "pokemon_b": pkmn_b["name"].capitalize(),
                     "type_a": types_a_desc,
                     "type_b": types_b_desc,
                     "winner": winner,

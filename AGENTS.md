@@ -94,4 +94,4 @@ Verify that the skill handles unknown Pokémon gracefully.
 **Agent**: "Pikachu è di tipo Eletttrico, mentre Gengar è Spettro e Veleno. L'Elettrico non è molto efficace contro lo Spettro. Gengar ha statistiche speciali più alte, quindi probabilmente Gengar vincerebbe!"
 
 ## 8. Execution Instruction
-Start by generating the `setup.py` with the skeleton code from https://github.com/OpenVoiceOS/ovos-skill-hello-world and make use of the https://github.com/PokeAPI/pokepy python3 wrapper. Then, generate the vocab and dialog files.
+Start by generating the `setup.py` with the skeleton code from https://github.com/OpenVoiceOS/ovos-skill-hello-world. Then, generate the vocab and dialog files.
