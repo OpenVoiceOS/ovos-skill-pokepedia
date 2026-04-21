@@ -1,0 +1,10 @@
+[run]
+source = ovos_skill_pokepedia
+omit = test/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError

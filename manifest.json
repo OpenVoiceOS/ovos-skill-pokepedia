@@ -1,0 +1,23 @@
+{
+  "skill_id": "ovos-skill-pokepedia",
+  "name": "Pokepedia Skill",
+  "description": "OVOS Pokémon Battle Assistant Skill - interactive Pokémon battles and queries",
+  "author": "denix",
+  "version": "1.0.0",
+  "homepage": "https://codeberg.org/denix/ovos-skill-pokepedia",
+  "category": "Skill",
+  "config_schema": {
+    "pokeapi_url": {
+      "type": "string",
+      "required": false,
+      "default": "https://pokeapi.co/api/v2",
+      "description": "PokeAPI base URL"
+    },
+    "language": {
+      "type": "string",
+      "required": false,
+      "default": "en",
+      "description": "Language for responses"
+    }
+  }
+}
