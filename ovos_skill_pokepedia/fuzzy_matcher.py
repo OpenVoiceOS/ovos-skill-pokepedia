@@ -39,6 +39,8 @@ class PokemonFuzzyMatcher:
             "squirtle": "squirtle",
             "bulbasaer": "bulbasaur",
             "bulbasaur": "bulbasaur",
+            "ratata": "rattata",
+            "rattata": "rattata",
             "pikachu": "pikachu",
             "meowth": "meowth",
             "meowt": "meowth",

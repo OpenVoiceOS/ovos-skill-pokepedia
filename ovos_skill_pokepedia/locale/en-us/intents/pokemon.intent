@@ -1,2 +1,6 @@
+tell me about {PokemonName}
+tell me everything about {PokemonName}
+what is {PokemonName}
+describe {PokemonName}
 who wins between {PokemonA} and {PokemonB}
 who would win {PokemonA} vs {PokemonB}
