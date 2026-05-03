@@ -26,7 +26,7 @@ class PokemonSkill(OVOSSkill):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_client = None
+        self.api_client: PokeAPIClient = None
         self.fuzzy_matcher = None
 
     @classproperty
@@ -42,6 +42,21 @@ class PokemonSkill(OVOSSkill):
             no_network_fallback=True,
             no_gui_fallback=True,
         )
+
+    @property
+    def client(self) -> PokeAPIClient:
+        """Public accessor for the API client.
+
+        Allows users to replace the client with a custom implementation:
+            skill.client = CustomPokemonClient()
+
+        The client must implement:
+            - get_pokemon(name: str) -> dict
+            - get_type(type_name: str) -> dict
+            - get_move(move_name: str) -> dict
+            - get_ability(ability_name: str) -> dict
+        """
+        return self.api_client
 
     def initialize(self):
         self.api_client = create_api_client()
