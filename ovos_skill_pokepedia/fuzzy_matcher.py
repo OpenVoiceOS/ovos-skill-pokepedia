@@ -5,7 +5,6 @@ Helps resolve STT misheard Pokémon names.
 
 import difflib
 import os
-from functools import lru_cache
 
 
 class PokemonFuzzyMatcher:
