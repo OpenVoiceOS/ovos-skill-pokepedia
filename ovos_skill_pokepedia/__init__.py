@@ -136,6 +136,9 @@ class PokemonSkill(OVOSSkill):
                 },
             )
 
+        except PokemonPokeAPIError as e:
+            LOG.error(f"Pokemon API error: {e}")
+            self.speak_dialog("error.not.found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon info: {e}")
             self.speak_dialog("error.not.found")
@@ -176,6 +179,9 @@ class PokemonSkill(OVOSSkill):
                 },
             )
 
+        except PokemonPokeAPIError as e:
+            LOG.error(f"Pokemon API error: {e}")
+            self.speak_dialog("error.not.found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon moves: {e}")
             self.speak_dialog("error.not.found")
@@ -214,6 +220,9 @@ class PokemonSkill(OVOSSkill):
                 },
             )
 
+        except PokemonPokeAPIError as e:
+            LOG.error(f"Pokemon API error: {e}")
+            self.speak_dialog("error.not.found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon type: {e}")
             self.speak_dialog("error.not.found")
@@ -318,6 +327,9 @@ class PokemonSkill(OVOSSkill):
                 },
             )
 
+        except PokemonPokeAPIError as e:
+            LOG.error(f"Pokemon API error: {e}")
+            self.speak_dialog("error.not.found")
         except Exception as e:
             LOG.error(f"Failed to compare battle: {e}")
             self.speak_dialog("error.not.found")

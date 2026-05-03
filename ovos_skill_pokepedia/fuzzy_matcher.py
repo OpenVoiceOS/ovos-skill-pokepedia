@@ -42,7 +42,6 @@ class PokemonFuzzyMatcher:
             "meowth": "meowth",
             "meowt": "meowth",
             "jigglypuff": "jigglypuff",
-            "jigglypuff": "jigglypuff",
             "gengar": "gengar",
             "geodude": "geodude",
             "cubone": "cubone",
