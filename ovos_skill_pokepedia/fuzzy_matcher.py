@@ -5,6 +5,7 @@ Helps resolve STT misheard Pokémon names.
 
 import difflib
 import os
+from functools import lru_cache
 
 
 class PokemonFuzzyMatcher:
@@ -97,9 +98,14 @@ class PokemonFuzzyMatcher:
         if input_lower in self.pokemon_names:
             return input_lower, 1.0
 
-        # Use fuzzy matching with get_close_matches
+        # Use cached fuzzy matching
+        return self._fuzzy_match_cached(input_lower, tuple(self.pokemon_names))
+
+    @lru_cache(maxsize=500)
+    def _fuzzy_match_cached(self, input_lower: str, pokemon_names_tuple: tuple) -> tuple:
+        """Cached fuzzy matching - avoids repeated expensive computations."""
         matches = difflib.get_close_matches(
-            input_lower, self.pokemon_names, n=1, cutoff=0.6
+            input_lower, list(pokemon_names_tuple), n=1, cutoff=0.6
         )
 
         if matches:
@@ -107,7 +113,7 @@ class PokemonFuzzyMatcher:
             return matches[0], confidence
 
         # No match found - return original
-        return input_name, 1.0
+        return input_lower, 1.0
 
     def _calculate_similarity(self, s1: str, s2: str) -> float:
         """Calculate similarity ratio between two strings."""
