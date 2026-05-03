@@ -3,8 +3,15 @@ OVOS Pokémon Battle Assistant Skill
 Child-friendly voice skill for querying Pokémon data and battle predictions.
 """
 
-import requests
-from functools import lru_cache
+from .api_client import (
+    PokemonPokeAPIError,
+    PokeAPIClient,
+    create_api_client,
+    get_type_advantage,
+    format_stat_childfriendly,
+    format_types_childfriendly,
+    TYPE_ADVANTAGES,
+)
 
 from ovos_utils import classproperty
 from ovos_utils.log import LOG
@@ -13,158 +20,6 @@ from ovos_utils.process_utils import RuntimeRequirements
 from ovos_workshop.decorators import intent_handler
 from ovos_workshop.skills import OVOSSkill
 
-# Type advantage map - simplified for children
-TYPE_ADVANTAGES = {
-    "fire": {
-        "weak_to": ["water", "ground", "rock"],
-        "strong_against": ["grass", "ice", "bug", "steel"],
-    },
-    "water": {
-        "weak_to": ["electric", "grass"],
-        "strong_against": ["fire", "ground", "rock"],
-    },
-    "grass": {
-        "weak_to": ["fire", "ice", "poison", "flying", "bug"],
-        "strong_against": ["water", "ground", "rock"],
-    },
-    "electric": {"weak_to": ["ground", "grass"], "strong_against": ["water", "flying"]},
-    "ice": {
-        "weak_to": ["fire", "steel", "rock", "fighting"],
-        "strong_against": ["grass", "ground", "flying", "dragon"],
-    },
-    "fighting": {
-        "weak_to": ["flying", "psychic", "fairy"],
-        "strong_against": ["normal", "ice", "rock", "dark", "steel"],
-    },
-    "poison": {"weak_to": ["ground", "psychic"], "strong_against": ["grass", "fairy"]},
-    "ground": {
-        "weak_to": ["water", "grass", "ice"],
-        "strong_against": ["fire", "electric", "poison", "rock", "steel"],
-    },
-    "flying": {
-        "weak_to": ["electric", "ice", "rock", "steel"],
-        "strong_against": ["grass", "fighting", "bug"],
-    },
-    "psychic": {
-        "weak_to": ["bug", "ghost", "dark"],
-        "strong_against": ["fighting", "poison"],
-    },
-    "bug": {
-        "weak_to": ["fire", "flying", "rock"],
-        "strong_against": ["grass", "psychic", "dark"],
-    },
-    "ghost": {"weak_to": ["ghost", "dark"], "strong_against": ["psychic", "ghost"]},
-    "dragon": {"weak_to": ["ice", "dragon", "fairy"], "strong_against": ["dragon"]},
-    "steel": {
-        "weak_to": ["fire", "fighting", "ground"],
-        "strong_against": ["ice", "rock", "fairy"],
-    },
-    "fairy": {
-        "weak_to": ["poison", "steel"],
-        "strong_against": ["fighting", "dragon", "dark"],
-    },
-    "normal": {"weak_to": ["fighting"], "strong_against": []},
-    "dark": {"weak_to": ["fighting", "fairy"], "strong_against": ["psychic", "ghost"]},
-    "rock": {
-        "weak_to": ["water", "grass", "fighting", "ground", "steel"],
-        "strong_against": ["fire", "ice", "flying", "bug"],
-    },
-}
-
-
-class PokemonPokeAPIError(Exception):
-    """Error when fetching Pokémon data from API fails."""
-
-    pass
-
-
-class PokeAPIClient:
-    """Wrapper client for PokeAPI with caching."""
-
-    BASE_URL = "https://pokeapi.co/api/v2"
-    TIMEOUT = 10
-
-    @lru_cache(maxsize=100)
-    def get_pokemon(self, name: str) -> dict:
-        """Fetch Pokémon by name (case-insensitive)."""
-        response = requests.get(
-            f"{self.BASE_URL}/pokemon/{name.lower()}", timeout=self.TIMEOUT
-        )
-        response.raise_for_status()
-        return response.json()
-
-    def get_type(self, type_name: str) -> dict:
-        """Fetch type by name."""
-        response = requests.get(
-            f"{self.BASE_URL}/type/{type_name.lower()}", timeout=self.TIMEOUT
-        )
-        response.raise_for_status()
-        return response.json()
-
-    def get_move(self, move_name: str) -> dict:
-        """Fetch move by name."""
-        response = requests.get(
-            f"{self.BASE_URL}/move/{move_name.lower()}", timeout=self.TIMEOUT
-        )
-        response.raise_for_status()
-        return response.json()
-
-    def get_ability(self, ability_name: str) -> dict:
-        """Fetch ability by name."""
-        response = requests.get(
-            f"{self.BASE_URL}/ability/{ability_name.lower()}", timeout=self.TIMEOUT
-        )
-        response.raise_for_status()
-        return response.json()
-
-
-def create_api_client() -> "PokeAPIClient | None":
-    """Factory to create API client with error handling."""
-    try:
-        return PokeAPIClient()
-    except Exception as e:
-        LOG.error(f"Failed to create PokeAPI client: {e}")
-        return None
-
-
-def get_type_advantage(attack_type: str, defend_type: str) -> str:
-    """
-    Get simplified type advantage explanation for children.
-    Returns English keys for translation.
-    """
-    attack = attack_type.lower()
-    defend = defend_type.lower()
-
-    advantages = TYPE_ADVANTAGES.get(attack, {})
-
-    if defend in advantages.get("strong_against", []):
-        return "very_effective"
-    elif defend in advantages.get("weak_to", []):
-        return "not_effective"
-    return "neutral"
-
-
-def format_stat_childfriendly(value: int) -> str:
-    """Convert stat to child-friendly tier key."""
-    if value >= 120:
-        return "very_strong"
-    elif value >= 100:
-        return "strong"
-    elif value >= 80:
-        return "normal"
-    elif value >= 60:
-        return "weak"
-    elif value >= 40:
-        return "very_weak"
-    else:
-        return "very_weak"
-
-
-def format_types_childfriendly(types: list) -> list:
-    """Format types list for children (lowercase English)."""
-    # Return lowercase English type names
-    return [t.lower() for t in types]
-
 
 class PokemonSkill(OVOSSkill):
     """OVOS Skill for Pokémon queries and battles."""
@@ -172,6 +27,7 @@ class PokemonSkill(OVOSSkill):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_client = None
+        self.fuzzy_matcher = None
 
     @classproperty
     def runtime_requirements(self):
@@ -191,7 +47,53 @@ class PokemonSkill(OVOSSkill):
         self.api_client = create_api_client()
         if self.api_client is None:
             LOG.error("Failed to create PokeAPI client")
+
+        # Initialize fuzzy matcher
+        try:
+            from .fuzzy_matcher import PokemonFuzzyMatcher
+            self.fuzzy_matcher = PokemonFuzzyMatcher()
+        except Exception as e:
+            LOG.warning(f"Failed to initialize fuzzy matcher: {e}")
+            self.fuzzy_matcher = None
+
         LOG.info("PokemonSkill initialized")
+
+    def _resolve_pokemon_name(self, name: str) -> str:
+        """Resolve potentially misspelled Pokémon name using fuzzy matching."""
+        if not self.fuzzy_matcher or not name:
+            return name
+        try:
+            matched, confidence = self.fuzzy_matcher.match(name)
+            if confidence >= 0.6:
+                return matched
+        except Exception:
+            pass
+        return name
+
+    def _get_type_advantages_for_pokemon(self, pokemon: dict) -> list:
+        """Extract type advantages for a Pokémon's types."""
+        types = [t["type"]["name"] for t in pokemon["types"]]
+        explanation = []
+        for t in types:
+            advantages = TYPE_ADVANTAGES.get(t, {})
+            if advantages.get("strong_against"):
+                type_map = {
+                    "fire": "grass",
+                    "water": "fire",
+                    "grass": "water",
+                    "electric": "water",
+                    "ice": "grass",
+                    "fighting": "normal",
+                }
+                strong = type_map.get(t, t)
+                explanation.append(f"strong_against_{strong}")
+        return explanation
+
+    def _format_type_explanation(self, explanations: list) -> str:
+        """Format type explanation for TTS output."""
+        if not explanations:
+            return self._translate("no_specific_advantages")
+        return ". ".join(self._translate(exp) for exp in explanations)
 
     @intent_handler(
         IntentBuilder("GetPokemonInfo").require("TellMeKeyword").require("PokemonName")
@@ -206,6 +108,9 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.not.found")
             return
 
+        # Use fuzzy matching to resolve potentially misspelled names
+        pokemon_name = self._resolve_pokemon_name(pokemon_name)
+
         try:
             pokemon = self.api_client.get_pokemon(pokemon_name)
 
@@ -216,9 +121,7 @@ class PokemonSkill(OVOSSkill):
             speed_tier = format_stat_childfriendly(stats.get("speed", 0))
             types_list = format_types_childfriendly(types)
 
-            # Translate types
             types_desc = " and ".join(self._translate(t) for t in types_list)
-            # Translate stat tiers
             attack_desc = self._translate(attack_tier)
             speed_desc = self._translate(speed_tier)
 
@@ -249,6 +152,8 @@ class PokemonSkill(OVOSSkill):
         if self.api_client is None:
             self.speak_dialog("error.not.found")
             return
+
+        pokemon_name = self._resolve_pokemon_name(pokemon_name)
 
         try:
             pokemon = self.api_client.get_pokemon(pokemon_name)
@@ -288,36 +193,17 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.not.found")
             return
 
+        pokemon_name = self._resolve_pokemon_name(pokemon_name)
+
         try:
             pokemon = self.api_client.get_pokemon(pokemon_name)
 
             types = [t["type"]["name"] for t in pokemon["types"]]
             types_list = format_types_childfriendly(types)
 
-            explanation = []
-            for t in types:
-                advantages = TYPE_ADVANTAGES.get(t, {})
-                if advantages.get("strong_against"):
-                    # Use mapping for translation keys (instead of hardcoded Italian)
-                    type_map = {
-                        "fire": "grass",
-                        "water": "fire",
-                        "grass": "water",
-                        "electric": "water",
-                        "ice": "grass",
-                        "fighting": "normal",
-                    }
-                    strong = type_map.get(t, t)
-                    explanation.append(f"strong_against_{strong}")
-
-            # Translate types
+            explanation = self._get_type_advantages_for_pokemon(pokemon)
             types_desc = " and ".join(self._translate(t) for t in types_list)
-            # Translate explanation keys
-            explanation_translated = (
-                ". ".join(self._translate(exp) for exp in explanation)
-                if explanation
-                else self._translate("no_specific_advantages")
-            )
+            explanation_translated = self._format_type_explanation(explanation)
 
             self.speak_dialog(
                 "pokemon.type",
@@ -331,6 +217,46 @@ class PokemonSkill(OVOSSkill):
         except Exception as e:
             LOG.error(f"Failed to get Pokemon type: {e}")
             self.speak_dialog("error.not.found")
+
+    def _fetch_battle_pokemon(self, name: str) -> dict:
+        """Fetch Pokémon data for battle comparison."""
+        return self.api_client.get_pokemon(name)
+
+    def _calculate_type_advantage_score(self, types_a: list, types_b: list) -> tuple:
+        """Calculate type advantage scores for both Pokémon."""
+        score_a = 0
+        score_b = 0
+
+        for ta in types_a:
+            for tb in types_b:
+                result = get_type_advantage(ta, tb)
+                if result == "very_effective":
+                    score_a += 1
+                elif result == "not_effective":
+                    score_a -= 1
+
+        for tb in types_b:
+            for ta in types_a:
+                result = get_type_advantage(tb, ta)
+                if result == "very_effective":
+                    score_b += 1
+                elif result == "not_effective":
+                    score_b -= 1
+
+        return score_a, score_b
+
+    def _calculate_battle_score(self, stats: dict, type_score: int) -> int:
+        """Calculate total battle score from stats and type advantage."""
+        total = sum(stats.values())
+        return total + (type_score * 20)
+
+    def _determine_winner(self, score_a: int, score_b: int, name_a: str, name_b: str) -> str:
+        """Determine battle winner based on scores."""
+        if score_a > score_b + 30:
+            return name_a.capitalize()
+        elif score_b > score_a + 30:
+            return name_b.capitalize()
+        return self._translate("depends_on_moves")
 
     @intent_handler(
         IntentBuilder("BattleComparison")
@@ -350,9 +276,13 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.not.found")
             return
 
+        # Use fuzzy matching for both Pokémon
+        pokemon_a = self._resolve_pokemon_name(pokemon_a)
+        pokemon_b = self._resolve_pokemon_name(pokemon_b)
+
         try:
-            pkmn_a = self.api_client.get_pokemon(pokemon_a)
-            pkmn_b = self.api_client.get_pokemon(pokemon_b)
+            pkmn_a = self._fetch_battle_pokemon(pokemon_a)
+            pkmn_b = self._fetch_battle_pokemon(pokemon_b)
 
             stats_a = {s["stat"]["name"]: s["base_stat"] for s in pkmn_a["stats"]}
             stats_b = {s["stat"]["name"]: s["base_stat"] for s in pkmn_b["stats"]}
@@ -360,42 +290,20 @@ class PokemonSkill(OVOSSkill):
             types_a = [t["type"]["name"] for t in pkmn_a["types"]]
             types_b = [t["type"]["name"] for t in pkmn_b["types"]]
 
-            total_a = sum(stats_a.values())
-            total_b = sum(stats_b.values())
+            type_score_a, type_score_b = self._calculate_type_advantage_score(
+                types_a, types_b
+            )
 
-            type_advantage_a = 0
-            type_advantage_b = 0
+            score_a = self._calculate_battle_score(stats_a, type_score_a)
+            score_b = self._calculate_battle_score(stats_b, type_score_b)
 
-            for ta in types_a:
-                for tb in types_b:
-                    result = get_type_advantage(ta, tb)
-                    if result == "very_effective":
-                        type_advantage_a += 1
-                    elif result == "not_effective":
-                        type_advantage_a -= 1
-
-            for tb in types_b:
-                for ta in types_a:
-                    result = get_type_advantage(tb, ta)
-                    if result == "very_effective":
-                        type_advantage_b += 1
-                    elif result == "not_effective":
-                        type_advantage_b -= 1
-
-            score_a = total_a + (type_advantage_a * 20)
-            score_b = total_b + (type_advantage_b * 20)
-
-            if score_a > score_b + 30:
-                winner = pkmn_a["name"].capitalize()
-            elif score_b > score_a + 30:
-                winner = pkmn_b["name"].capitalize()
-            else:
-                winner = self._translate("depends_on_moves")
+            winner = self._determine_winner(
+                score_a, score_b, pkmn_a["name"], pkmn_b["name"]
+            )
 
             types_a_list = format_types_childfriendly(types_a)
             types_b_list = format_types_childfriendly(types_b)
 
-            # Translate types
             types_a_desc = " and ".join(self._translate(t) for t in types_a_list)
             types_b_desc = " and ".join(self._translate(t) for t in types_b_list)
 
