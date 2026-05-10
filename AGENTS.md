@@ -95,3 +95,8 @@ Verify that the skill handles unknown Pokémon gracefully.
 
 ## 8. Execution Instruction
 Start by generating the `setup.py` with the skeleton code from https://github.com/OpenVoiceOS/ovos-skill-hello-world. Then, generate the vocab and dialog files.
+
+## 9. Version Management
+- Keep versions synchronized between `manifest.json` and `ovos_skill_pokepedia/version.py`
+- Before merging to main: bump version in both files
+- Version format: MAJOR.MINOR.BUILD (alpha versions use VERSION_ALPHA > 0)
