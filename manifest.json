@@ -3,7 +3,7 @@
   "name": "Pokepedia Skill",
   "description": "OVOS Pokémon Battle Assistant Skill - interactive Pokémon battles and queries",
   "author": "denix",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://codeberg.org/denix/ovos-skill-pokepedia",
   "category": "Skill",
   "config_schema": {
