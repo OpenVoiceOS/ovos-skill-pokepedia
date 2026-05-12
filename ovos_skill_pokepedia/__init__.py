@@ -79,6 +79,9 @@ class PokemonSkill(OVOSSkill):
         """
         if not name:
             return name
+        name = str(name).strip()
+        if not name:
+            return name
         aliases = self._load_name_aliases()
         normalized_name = name.casefold()
         if normalized_name in aliases:
