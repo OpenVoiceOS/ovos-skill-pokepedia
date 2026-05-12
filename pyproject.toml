@@ -35,6 +35,11 @@ test = [
     "pytest-timeout>=2.0.0",
     "requests-mock>=1.10.0",
     "ovoscope>=0.13.0",
+    # Pipeline plugins ovoscope expects at runtime — entry points
+    # ovos-adapt-pipeline-plugin / ovos-padatious-pipeline-plugin live
+    # in these PyPI packages.
+    "ovos-adapt-parser",
+    "ovos-padatious",
 ]
 
 [project.urls]

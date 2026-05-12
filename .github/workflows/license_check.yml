@@ -8,3 +8,9 @@ on:
 jobs:
   license_check:
     uses: OpenVoiceOS/gh-automations/.github/workflows/license-check.yml@dev
+    with:
+      # pip-licenses (used by the action) does not yet read the SPDX
+      # License-Expression metadata field; self-detection then reports
+      # "Error". Exclude the package itself — its license is governed
+      # by the LICENSE file at the repo root.
+      exclude_packages: '^ovos-skill-pokepedia$'
