@@ -101,5 +101,65 @@ class TestFuzzyMatch:
         assert score < 0.6
 
 
+class _FakeResources:
+    def __init__(self, files):
+        self.files = files
+
+    def load_named_value_file(self, name):
+        return self.files.get(name, {})
+
+
+class TestSkillLocalizationHelpers:
+    @staticmethod
+    def _make_skill(files, names=None, lang="fr-FR"):
+        from ovos_skill_pokepedia import PokemonSkill
+
+        class Harness:
+            _load_name_aliases = PokemonSkill._load_name_aliases
+            _localized_pokemon_name = PokemonSkill._localized_pokemon_name
+            _resolve_pokemon_name = PokemonSkill._resolve_pokemon_name
+            _phrase = PokemonSkill._phrase
+            _format_types = PokemonSkill._format_types
+            _join_for_speech = PokemonSkill._join_for_speech
+
+            def __init__(self):
+                self.resources = _FakeResources(files)
+                self.lang = lang
+
+            def voc_list(self, name):
+                return names or []
+
+        return Harness()
+
+    def test_resolve_french_name_to_api_slug(self):
+        skill = self._make_skill(
+            {"pokemon.name.aliases": {"salamèche": "charmander"}},
+            ["charmander", "salamèche"],
+        )
+
+        assert skill._resolve_pokemon_name("salamèche") == "charmander"
+
+    def test_localized_display_name(self):
+        skill = self._make_skill(
+            {"pokemon.name.display": {"charmander": "Salamèche"}}
+        )
+
+        assert skill._localized_pokemon_name("charmander") == "Salamèche"
+
+    def test_format_types_uses_type_specific_phrase(self):
+        skill = self._make_skill(
+            {
+                "phrases": {
+                    "normal": "correcte",
+                    "normal_type": "Normal",
+                    "flying_type": "Vol",
+                    "list_conjunction": "et",
+                }
+            }
+        )
+
+        assert skill._format_types(["normal", "flying"]) == "Normal et Vol"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
