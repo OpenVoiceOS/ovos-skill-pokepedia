@@ -11,6 +11,6 @@ jobs:
     with:
       python_version: '3.11'
       coverage_source: 'ovos_skill_pokepedia'
-      test_path: 'test/'
-      install_extras: ''
+      test_path: 'test/test_pokepedia.py'
+      install_extras: '.[test]'
       min_coverage: 0

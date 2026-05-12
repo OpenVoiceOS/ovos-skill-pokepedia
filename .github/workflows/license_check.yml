@@ -8,3 +8,10 @@ on:
 jobs:
   license_check:
     uses: OpenVoiceOS/gh-automations/.github/workflows/license-check.yml@dev
+    with:
+      # pip-licenses (used by pilosus/action-pip-license-checker) does not
+      # yet read the SPDX License-Expression field added in core metadata
+      # 2.4, so it reports "Error" for any package using the modern form
+      # (including this package itself). Drop "Error" from the failure
+      # set — real copyleft violations (Strong/Network/Weak) still block.
+      fail_licenses: 'StrongCopyleft,NetworkCopyleft,WeakCopyleft,Other'
