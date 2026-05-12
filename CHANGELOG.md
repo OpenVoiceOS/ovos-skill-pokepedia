@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.1.3a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.3a1) (2026-05-12)
+## [0.1.3a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.3a2) (2026-05-12)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.2...0.1.3a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.2...0.1.3a2)
 
 **Merged pull requests:**
 
