@@ -1,5 +1,4 @@
 """Shared infrastructure for pokepedia intent-routing tests."""
-from copy import deepcopy
 from unittest.mock import MagicMock
 
 from ovos_bus_client.message import Message
@@ -52,11 +51,11 @@ class IntentRoutingMixin:
         session = Session(f"pokepedia-{self.LANG}-{intent_name}-{hash(utterance)}")
         session.lang = self.LANG
         session.pipeline = [
-            "ovos-padatious-pipeline-plugin-high",
+            "ovos-padacioso-pipeline-plugin-high",
             "ovos-adapt-pipeline-plugin-high",
-            "ovos-padatious-pipeline-plugin-medium",
+            "ovos-padacioso-pipeline-plugin-medium",
             "ovos-adapt-pipeline-plugin-medium",
-            "ovos-padatious-pipeline-plugin-low",
+            "ovos-padacioso-pipeline-plugin-low",
             "ovos-adapt-pipeline-plugin-low",
         ]
         message = Message(

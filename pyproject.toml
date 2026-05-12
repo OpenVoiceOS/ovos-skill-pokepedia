@@ -35,6 +35,7 @@ test = [
     "pytest-timeout>=2.0.0",
     "requests-mock>=1.10.0",
     "ovoscope>=0.13.0",
+    "ovos-adapt-parser>=1.0.0",
 ]
 
 [project.urls]
