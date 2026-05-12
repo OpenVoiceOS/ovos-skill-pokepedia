@@ -1,13 +1,39 @@
 qui gagne entre {PokemonA} et {PokemonB}
+qui gagne dans un combat entre {PokemonA} et {PokemonB}
+qui gagne dans un combat pokémon entre {PokemonA} et {PokemonB}
+qui gagne dans un combat pokemon entre {PokemonA} et {PokemonB}
 qui gagnerait {PokemonA} contre {PokemonB}
+qui gagnerait entre {PokemonA} et {PokemonB}
+qui gagnerait dans un combat entre {PokemonA} et {PokemonB}
+qui gagnerait dans un combat pokémon entre {PokemonA} et {PokemonB}
+qui gagnerait dans un combat pokemon entre {PokemonA} et {PokemonB}
 qui l'emporte entre {PokemonA} et {PokemonB}
+qui remporte le combat entre {PokemonA} et {PokemonB}
 qui est plus fort {PokemonA} ou {PokemonB}
 qui est plus fort entre {PokemonA} et {PokemonB}
 qui est plus fort {PokemonA} contre {PokemonB}
+qui serait le plus fort entre {PokemonA} et {PokemonB}
+lequel est le plus fort entre {PokemonA} et {PokemonB}
+lequel gagnerait entre {PokemonA} et {PokemonB}
+qui a l'avantage entre {PokemonA} et {PokemonB}
+lequel a l'avantage entre {PokemonA} et {PokemonB}
+quel pokémon est le plus fort entre {PokemonA} et {PokemonB}
+quel pokemon est le plus fort entre {PokemonA} et {PokemonB}
+quel pokémon a l'avantage entre {PokemonA} et {PokemonB}
+quel pokemon a l'avantage entre {PokemonA} et {PokemonB}
 plus fort {PokemonA} ou {PokemonB}
 {PokemonA} vs {PokemonB}
 {PokemonA} contre {PokemonB}
 combat entre {PokemonA} et {PokemonB}
+combat pokémon entre {PokemonA} et {PokemonB}
+combat pokemon entre {PokemonA} et {PokemonB}
 duel entre {PokemonA} et {PokemonB}
 comparer {PokemonA} et {PokemonB}
+compare {PokemonA} et {PokemonB}
+compare les pokémon {PokemonA} et {PokemonB}
+compare les pokemon {PokemonA} et {PokemonB}
 {PokemonA} ou {PokemonB} qui gagne
+{PokemonA} ou {PokemonB} qui est le plus fort
+{PokemonA} ou {PokemonB} lequel est le plus fort
+entre {PokemonA} et {PokemonB} qui gagne
+entre {PokemonA} et {PokemonB} lequel est le plus fort
