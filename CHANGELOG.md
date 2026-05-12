@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.2a2) (2026-05-12)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.2a1...0.1.2a2)
+
+**Merged pull requests:**
+
+- ci: fix test extra, license metadata, scope build-tests/coverage to unit tests [\#4](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/4) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.2a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.2a1) (2026-05-12)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/20df1eae1dbbd867f472ab31090f6119eec3b9b9...0.1.2a1)
