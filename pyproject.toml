@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ovos-skill-pokepedia"
+dynamic = ["version"]
+description = "OVOS Pokémon Battle Assistant Skill"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "denix" },
+    { name = "OpenVoiceOS", email = "openvoiceos@gmail.com" },
+]
+keywords = ["ovos", "skill", "pokemon", "battle", "pokeapi"]
+requires-python = ">=3.10"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "ovos-utils>=0.0.38",
+    "ovos-workshop>=0.0.15,<9.0.0",
+    "requests>=2.31.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/OpenVoiceOS/ovos-skill-pokepedia"
+Upstream = "https://codeberg.org/denix/ovos-skill-pokepedia"
+
+[project.entry-points."opm.skill"]
+"ovos-skill-pokepedia.openvoiceos" = "ovos_skill_pokepedia:PokemonSkill"
+
+[tool.setuptools.dynamic]
+version = { attr = "ovos_skill_pokepedia.version.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["ovos_skill_pokepedia*"]
+
+[tool.setuptools.package-data]
+ovos_skill_pokepedia = ["locale/**/*", "*.json"]

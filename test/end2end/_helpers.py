@@ -9,7 +9,7 @@ from ovoscope import End2EndTest, get_minicroft
 
 from .fixtures import fake_get_pokemon
 
-SKILL_ID = "ovos-skill-pokepedia.denix"
+SKILL_ID = "ovos-skill-pokepedia.openvoiceos"
 
 _IGNORE = [
     "speak",
@@ -28,7 +28,7 @@ class IntentRoutingMixin:
     """
 
     LANG: str = "en-US"
-    SECONDARY_LANGS = ["es-ES", "fr-FR", "it-IT"]
+    SECONDARY_LANGS = ["es-ES", "fr-FR", "it-IT", "pt-PT"]
 
     @classmethod
     def setUpClass(cls):
