@@ -156,6 +156,14 @@ class TestSkillLocalizationHelpers:
 
         assert skill._resolve_pokemon_name("salamèche") == "charmander"
 
+    def test_resolve_french_asr_variant_to_api_slug(self):
+        skill = self._make_skill(
+            {"pokemon.name.aliases": {"bulbizar": "bulbasaur"}},
+            ["bulbasaur", "bulbizarre", "bulbizar"],
+        )
+
+        assert skill._resolve_pokemon_name("bulbizar") == "bulbasaur"
+
     def test_localized_display_name(self):
         skill = self._make_skill(
             {"pokemon.name.display": {"charmander": "Salamèche"}}
