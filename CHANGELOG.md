@@ -1,20 +1,13 @@
 # Changelog
 
-## [0.1.2a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.2a2) (2026-05-12)
+## [0.1.3a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.3a1) (2026-05-12)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.2a1...0.1.2a2)
-
-**Merged pull requests:**
-
-- ci: fix test extra, license metadata, scope build-tests/coverage to unit tests [\#4](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/4) ([JarbasAl](https://github.com/JarbasAl))
-
-## [0.1.2a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.2a1) (2026-05-12)
-
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/20df1eae1dbbd867f472ab31090f6119eec3b9b9...0.1.2a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.2...0.1.3a1)
 
 **Merged pull requests:**
 
-- feat: add pt-PT \(Portuguese-Portugal\) locale support [\#1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/1) ([JarbasAl](https://github.com/JarbasAl))
+- Merge pull request \#2 from OpenVoiceOS/release-0.1.2a1 [\#8](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/8) ([denics](https://github.com/denics))
+- Release 0.1.2a1 [\#2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/2) ([github-actions[bot]](https://github.com/apps/github-actions))
 
 
 
