@@ -12,3 +12,10 @@ jobs:
       python_version: '3.11'
       install_extras: 'test'
       test_path: 'test/end2end/'
+      # The skill drives intents via Adapt (info/moves/type) and
+      # Padatious (battle). Force the workflow to install both
+      # pipeline plugins and their system deps (swig + libfann-dev
+      # for padatious' fann2 C extension); otherwise the entire
+      # e2e suite is silently skipped.
+      require_adapt: true
+      require_padatious: true
