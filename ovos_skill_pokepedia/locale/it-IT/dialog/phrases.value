@@ -1,0 +1,28 @@
+very_strong, attacco molto forte
+strong, attacco forte
+normal, attacco medio
+weak, attacco debole
+very_weak, attacco molto debole
+fire, Fuoco
+water, Acqua
+grass, Erba
+electric, Elettro
+ice, Ghiaccio
+fighting, Lotta
+poison, Veleno
+ground, Terra
+flying, Volante
+psychic, Psico
+bug, Coleottero
+rock, Roccia
+ghost, Spettro
+dragon, Drago
+dark, Buio
+steel, Acciaio
+fairy, Folletto
+no_specific_advantages, nessun vantaggio di tipo specifico
+strong_against_grass, forte contro i tipi Erba
+strong_against_fire, forte contro i tipi Fuoco
+strong_against_water, forte contro i tipi Acqua
+strong_against_normal, forte contro i tipi Normale
+depends_on_moves, dipende dalle mosse utilizzate

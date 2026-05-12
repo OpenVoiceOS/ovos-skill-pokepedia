@@ -1,0 +1,29 @@
+very_strong, very strong attack
+strong, strong attack
+normal, average attack
+weak, weak attack
+very_weak, very weak attack
+fire, Fire
+water, Water
+grass, Grass
+electric, Electric
+ice, Ice
+fighting, Fighting
+poison, Poison
+ground, Ground
+flying, Flying
+psychic, Psychic
+bug, Bug
+rock, Rock
+ghost, Ghost
+dragon, Dragon
+dark, Dark
+steel, Steel
+fairy, Fairy
+normal_type, Normal
+no_specific_advantages, no specific type advantages
+strong_against_grass, strong against Grass types
+strong_against_fire, strong against Fire types
+strong_against_water, strong against Water types
+strong_against_normal, strong against Normal types
+depends_on_moves, it depends on the moves used

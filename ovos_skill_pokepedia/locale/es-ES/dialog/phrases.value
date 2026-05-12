@@ -1,0 +1,28 @@
+very_strong, ataque muy fuerte
+strong, ataque fuerte
+normal, ataque medio
+weak, ataque débil
+very_weak, ataque muy débil
+fire, Fuego
+water, Agua
+grass, Planta
+electric, Eléctrico
+ice, Hielo
+fighting, Lucha
+poison, Veneno
+ground, Tierra
+flying, Volador
+psychic, Psíquico
+bug, Bicho
+rock, Roca
+ghost, Fantasma
+dragon, Dragón
+dark, Siniestro
+steel, Acero
+fairy, Hada
+no_specific_advantages, sin ventajas de tipo específicas
+strong_against_grass, fuerte contra tipos Planta
+strong_against_fire, fuerte contra tipos Fuego
+strong_against_water, fuerte contra tipos Agua
+strong_against_normal, fuerte contra tipos Normal
+depends_on_moves, depende de los movimientos usados

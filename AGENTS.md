@@ -1,102 +1,136 @@
 # Project: OVOS Pokémon Battle Assistant
 
-## Role
-Senior Python Developer & OVOS Architect
+OVOS skill that queries [PokeAPI](https://pokeapi.co) for Pokémon stats, types,
+moves, and predicts simple type-advantage-based battle outcomes. Child-friendly
+TTS-oriented responses. Supported locales: en-US, es-ES, fr-FR, it-IT.
 
-## Target
-OpenVoiceOS (OVOS) Skill for Children's Pokémon Battles
+---
 
-## 1. Context & Objective
-Create a robust, child-friendly OVOS skill that allows users to query Pokémon data via voice. The skill must interface with the public **PokeAPI** to retrieve stats, types, moves, and abilities. The output must be spoken naturally, suitable for a child, and optimized for battle scenarios (e.g., explaining type advantages).
+## Skill lifecycle rules
 
-## 2. Tech Stack & Constraints
-- **Runtime**: OpenVoiceOS (OVOS) / Mycroft Core compatible.
-- **Language**: Python 3.8+.
-- **External API**: PokeAPI (https://pokeapi.co) - No auth required, RESTful JSON.
-- **Dependencies**: `requests`, `ovos-utils` (standard OVOS imports).
-- **Constraints**:
-  - Must handle network errors gracefully (timeout/retry).
-  - Responses must be concise for TTS (Text-to-Speech).
-  - No complex math in speech; simplify battle logic for kids.
-  - Follow OVOS skill directory structure strictly.
+1. **Defaults must be assigned BEFORE `super().__init__()`** in the skill
+   constructor. `OVOSSkill.__init__` runs the full skill lifecycle (including
+   `initialize()`) via the super call. Assigning `self.api_client = None`
+   *after* `super().__init__()` wipes the value `initialize()` set and every
+   intent silently falls back to `error.not.found`.
 
-## 3. Directory Structure
-Follow https://github.com/OpenVoiceOS/ovos-skill-hello-world for the file structure including tests, documentation and workflows.
+2. **There is no `self._translate()` on OVOSSkill.** Translations live in
+   `locale/<lang>/dialog/phrases.value` and are read with
+   `self.resources.load_named_value_file("phrases")`.
 
-## 4. Functional Requirements
+3. **Fuzzy matching uses `ovos_utils.parse.match_one` directly.** No helper
+   class. `_resolve_pokemon_name` sources names from `PokemonName.voc` via
+   `self.resources.load_vocabulary_file("PokemonName")`.
 
-### A. Intents (Vocabularies)
-Define intents to capture:
+4. **Adapt entity name == .voc filename.** Voc files are named exactly after
+   the entity required by the IntentBuilder: `TellMeKeyword.voc`,
+   `MovesKeyword.voc`, `TypeKeyword.voc`, `PokemonName.voc`.
 
-- `GetPokemonInfo`: "Tell me about [Pokemon Name]"
-- `GetPokemonMoves`: "What moves does [Pokemon Name] have?"
-- `GetPokemonType`: "What type is [Pokemon Name]?"
-- `BattleComparison`: "Who wins between [Pokemon A] and [Pokemon B]?" (Simple logic)
+5. **Locale dirs are BCP-47** (`en-US`, not `en-us`).
 
-### B. API Integration Logic
-Endpoint: https://pokeapi.co/api/v2/pokemon/{name}
-Make use of https://github.com/PokeAPI/pokepy
+6. **Padatious capture groups need a non-slot token between them.**
+   `{PokemonA} {PokemonB}` is invalid syntax. Every `battle.intent` line uses
+   a real connector word (`and`, `vs`, `or`, `between`, `against`, `y`,
+   `contra`, `entre`, `et`, `ou`, `e`, `tra`, `o`).
 
-Data Extraction:
-- **stats**: Extract HP, Attack, Defense, Speed.
-- **types**: List primary and secondary types.
-- **moves**: List top 5 most powerful or signature moves.
-- **abilities**: Brief description of passive effects.
+---
 
-Error Handling: If API fails, return a fallback message:  
-*"I couldn't find that Pokémon right now, try again later."*
+## Intent pipeline split
 
-### C. Child-Friendly Speech Synthesis
-Tone: Enthusiastic, encouraging, simple vocabulary.
+Each intent uses exactly one pipeline. Do not duplicate intents across both.
 
-Formatting:
-- Instead of "Attack stat is 110", say "It has a very strong attack!"
-- Explain types simply: "Fire is strong against Grass."
+| Intent              | Engine    | Source files                              |
+|---------------------|-----------|-------------------------------------------|
+| `GetPokemonInfo`    | Adapt     | `TellMeKeyword.voc` + `PokemonName.voc`   |
+| `GetPokemonMoves`   | Adapt     | `MovesKeyword.voc` + `PokemonName.voc`    |
+| `GetPokemonType`    | Adapt     | `TypeKeyword.voc` + `PokemonName.voc`     |
+| `BattleComparison`  | Padatious | `battle.intent` + `PokemonA.entity` + `PokemonB.entity` |
 
-Battle Logic: Implement a simplified damage calculator based on type matchups (e.g., Water > Fire, Fire > Grass). Do not simulate turn-by-turn combat; just predict the winner based on type advantage and base stats.
+Info/moves/type each have an unambiguous trigger keyword and a single entity
+slot — Adapt is deterministic and needs no training data churn for short
+variants like "moves pikachu". Battle needs two slots with varied connector
+words across four languages — Padatious handles that natively.
 
-## 5. Implementation Steps for the Agent
+When adding a new intent, pick one engine. Do not write both a `.voc`-driven
+IntentBuilder and an `.intent` file for the same handler.
 
-### Step 1: Skeleton Generation
-Create the directory structure.
-Write `setup.py` with correct OVOS metadata.
-Create empty `__init__.py` and `pokemon_skill.py`.
+---
 
-### Step 2: Intent Definition
-Generate `vocab/pokemon.voc` with a list of common Pokémon names (Charmander, Bulbasaur, Squirtle, Pikachu, etc.) and generic triggers.
-Define the intent logic in `pokemon_skill.py` using `@intent_handler`.
+## Resource layout
 
-### Step 3: API Client Class
-Create a helper class `PokeAPIClient` inside `pokemon_skill.py`.
-Implement `fetch_pokemon(name)` with error handling and caching (basic memory cache to reduce API calls).
-Implement `get_type_advantage(attacker_type, defender_type)` returning a boolean or string explanation.
+```
+ovos_skill_pokepedia/locale/<lang>/
+├── dialog/
+│   ├── *.dialog           # spoken responses
+│   └── phrases.value      # internal-key → localized phrase (CSV)
+├── intents/
+│   ├── battle.intent      # padatious training utterances (battle only)
+│   ├── PokemonA.entity    # padatious slot values
+│   └── PokemonB.entity    # padatious slot values
+└── vocab/
+    ├── TellMeKeyword.voc  # adapt keywords (info trigger)
+    ├── MovesKeyword.voc   # adapt keywords (moves trigger)
+    ├── TypeKeyword.voc    # adapt keywords (type trigger)
+    └── PokemonName.voc    # adapt entity values + fuzzy-match source
+```
 
-### Step 4: Dialog Templates
-Create `dialog/pokemon.dialog` with placeholders like `{pokemon_name}`, `{stat_description}`, `{type_list}`.
-Ensure sentences flow naturally for TTS (avoid raw JSON dumps).
+Voc filenames must match the entity name used in `IntentBuilder.require(...)`.
+Entity filenames must match the slot name used in `.intent` files.
 
-### Step 5: Testing & Validation
-Provide a mock test script to simulate voice commands locally.
-Verify that the skill handles unknown Pokémon gracefully.
+---
 
-## 6. Code Quality Standards
-- **Docstrings**: Every function must have a docstring explaining inputs/outputs.
-- **Logging**: Use `self.log.info()` or `self.log.error()` for debugging.
-- **Comments**: Explain complex logic, especially the battle prediction algorithm.
-- **Security**: No hardcoded secrets (none needed for PokeAPI).
+## API client injection
 
-## 7. Example Interaction Flow
+`PokemonSkill.client` is a property exposing `self.api_client`. Tests and
+power users override it post-load:
 
-**User**: "Dimmi tutto su Charizard"  
-**Agent**: "Charizard è un Pokémon di tipo Fuoco e Volante. È molto veloce e ha un attacco potente. Le sue mosse migliori includono Lanciafiamme e Vento Afferato. In battaglia, è forte contro i Pokémon di tipo Erba e Ghiaccio!"
+```python
+skill.api_client = MagicMock()
+skill.api_client.get_pokemon.side_effect = lambda name: FIXTURE[name.lower()]
+```
 
-**User**: "Chi vince tra Pikachu e Gengar?"  
-**Agent**: "Pikachu è di tipo Eletttrico, mentre Gengar è Spettro e Veleno. L'Elettrico non è molto efficace contro lo Spettro. Gengar ha statistiche speciali più alte, quindi probabilmente Gengar vincerebbe!"
+This is the supported way to mock the network in tests. Do not mock
+`requests` at the module level.
 
-## 8. Execution Instruction
-Start by generating the `setup.py` with the skeleton code from https://github.com/OpenVoiceOS/ovos-skill-hello-world. Then, generate the vocab and dialog files.
+---
 
-## 9. Version Management
-- Keep versions synchronized between `manifest.json` and `ovos_skill_pokepedia/version.py`
-- Before merging to main: bump version in both files
-- Version format: MAJOR.MINOR.BUILD (alpha versions use VERSION_ALPHA > 0)
+## Tests
+
+```bash
+pip install -e . -r test/requirements.txt
+pytest test/                        # 111 tests
+pytest test/end2end/ -v             # 93 ovoscope intent-routing tests
+pytest test/test_pokepedia.py -v    # 18 helper unit tests
+```
+
+### Conventions
+
+- **One test method per planned utterance.** Intent coverage, not code
+  coverage — a failure must name the exact phrasing and language that
+  doesn't route.
+- **No bus-bypassing tests.** Never instantiate `PokemonSkill(bus=None)` and
+  call handlers directly. Use ovoscope's `End2EndTest` + `get_minicroft`.
+- The shared helper at `test/end2end/_helpers.py` injects a mocked
+  `api_client` in `setUpClass` so no real HTTP traffic happens.
+- The session pipeline interleaves Adapt and Padatious at each priority
+  tier — each intent matches in its own engine without ranking games.
+
+---
+
+## Code quality
+
+- No `try: ... except Exception: pass` to silence bugs. Let failures surface.
+- No hardcoded fallback lists for data that belongs in `.voc` / `.entity`
+  files. If the resource is missing, fail loudly.
+- Use OVOS resource loading: `self.voc_list`, `self.resources.load_vocabulary_file`,
+  `self.resources.load_named_value_file`, `self.dialog_renderer.render` —
+  they handle locale fallback and caching.
+- No emojis in code unless explicitly requested.
+
+---
+
+## Version management
+
+Versions in `manifest.json` and `ovos_skill_pokepedia/version.py` must stay
+in sync. Before merging to main: bump both. Format `MAJOR.MINOR.BUILD`;
+alpha versions set `VERSION_ALPHA > 0`.

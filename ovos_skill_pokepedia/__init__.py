@@ -1,97 +1,82 @@
-"""
-OVOS Pokémon Battle Assistant Skill
+"""OVOS Pokémon Battle Assistant Skill.
+
 Child-friendly voice skill for querying Pokémon data and battle predictions.
 """
+from typing import Optional
+
+from ovos_utils.log import LOG
+from ovos_utils.parse import match_one
+from ovos_workshop.decorators import intent_handler
+from ovos_workshop.intents import IntentBuilder
+from ovos_workshop.skills import OVOSSkill
 
 from .api_client import (
-    PokemonPokeAPIError,
     PokeAPIClient,
+    PokemonPokeAPIError,
+    TYPE_ADVANTAGES,
     create_api_client,
-    get_type_advantage,
     format_stat_childfriendly,
     format_types_childfriendly,
-    TYPE_ADVANTAGES,
+    get_type_advantage,
 )
-
-from ovos_utils import classproperty
-from ovos_utils.log import LOG
-from ovos_workshop.intents import IntentBuilder
-from ovos_utils.process_utils import RuntimeRequirements
-from ovos_workshop.decorators import intent_handler
-from ovos_workshop.skills import OVOSSkill
 
 
 class PokemonSkill(OVOSSkill):
     """OVOS Skill for Pokémon queries and battles."""
 
     def __init__(self, *args, **kwargs):
+        self.api_client: Optional[PokeAPIClient] = None
         super().__init__(*args, **kwargs)
-        self.api_client: PokeAPIClient = None
-        self.fuzzy_matcher = None
-
-    @classproperty
-    def runtime_requirements(self):
-        return RuntimeRequirements(
-            internet_before_load=True,
-            network_before_load=False,
-            gui_before_load=False,
-            requires_internet=True,
-            requires_network=False,
-            requires_gui=False,
-            no_internet_fallback=False,
-            no_network_fallback=True,
-            no_gui_fallback=True,
-        )
 
     @property
     def client(self) -> PokeAPIClient:
-        """Public accessor for the API client.
-
-        Allows users to replace the client with a custom implementation:
-            skill.client = CustomPokemonClient()
-
-        The client must implement:
-            - get_pokemon(name: str) -> dict
-            - get_type(type_name: str) -> dict
-            - get_move(move_name: str) -> dict
-            - get_ability(ability_name: str) -> dict
-        """
+        """Public accessor — tests / power users can swap with a mock or a
+        custom implementation that exposes the same get_pokemon/get_type/
+        get_move/get_ability interface."""
+        if self.api_client is None:
+            self.api_client = create_api_client()
+            if self.api_client is None:
+                LOG.error("Failed to create PokeAPI client")
         return self.api_client
 
-    def initialize(self):
-        self.api_client = create_api_client()
-        if self.api_client is None:
-            LOG.error("Failed to create PokeAPI client")
+    # ------------------------------------------------------------------ i18n
 
-        # Initialize fuzzy matcher
+    def _phrase(self, key: str, lang: Optional[str] = None) -> str:
+        """Look up a localized phrase from phrases.value (key,value CSV).
+
+        Used to translate internal labels — stat tiers, type names,
+        battle outcome blurbs — into the active locale's wording. Falls
+        back to the bare key if no entry exists.
+        """
         try:
-            from .fuzzy_matcher import PokemonFuzzyMatcher
-            self.fuzzy_matcher = PokemonFuzzyMatcher()
-        except Exception as e:
-            LOG.warning(f"Failed to initialize fuzzy matcher: {e}")
-            self.fuzzy_matcher = None
+            mapping = self.resources.load_named_value_file("phrases")
+        except Exception:
+            mapping = {}
+        return mapping.get(key, key)
 
-        LOG.info("PokemonSkill initialized")
+    # --------------------------------------------------------------- helpers
 
     def _resolve_pokemon_name(self, name: str) -> str:
-        """Resolve potentially misspelled Pokémon name using fuzzy matching."""
-        if not self.fuzzy_matcher or not name:
+        """Map a (possibly misheard) Pokémon name to the closest known one.
+
+        Uses ovos_utils.parse.match_one against the loaded PokemonName.voc.
+        """
+        if not name:
             return name
-        try:
-            matched, confidence = self.fuzzy_matcher.match(name)
-            if confidence >= 0.6:
-                return matched
-        except Exception:
-            pass
-        return name
+        choices = [n.lower() for n in self.voc_list("PokemonName")]
+        if not choices:
+            return name
+        best, score = match_one(name.lower(), choices)
+        return best if score >= 0.6 else name
+
+    def _format_types(self, types_list) -> str:
+        return " and ".join(self._phrase(t) for t in types_list)
 
     def _get_type_advantages_for_pokemon(self, pokemon: dict) -> list:
-        """Extract type advantages for a Pokémon's types."""
         types = [t["type"]["name"] for t in pokemon["types"]]
         explanation = []
         for t in types:
-            advantages = TYPE_ADVANTAGES.get(t, {})
-            if advantages.get("strong_against"):
+            if TYPE_ADVANTAGES.get(t, {}).get("strong_against"):
                 type_map = {
                     "fire": "grass",
                     "water": "fire",
@@ -105,52 +90,47 @@ class PokemonSkill(OVOSSkill):
         return explanation
 
     def _format_type_explanation(self, explanations: list) -> str:
-        """Format type explanation for TTS output."""
         if not explanations:
-            return self._translate("no_specific_advantages")
-        return ". ".join(self._translate(exp) for exp in explanations)
+            return self._phrase("no_specific_advantages")
+        return ". ".join(self._phrase(exp) for exp in explanations)
+
+    # ------------------------------------------------------------------ intents
 
     @intent_handler(
-        IntentBuilder("GetPokemonInfo").require("TellMeKeyword").require("PokemonName")
+        IntentBuilder("GetPokemonInfo")
+        .require("TellMeKeyword")
+        .require("PokemonName")
     )
     def handle_get_pokemon_info(self, message):
         pokemon_name = message.data.get("PokemonName")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
-
-        if self.api_client is None:
+        if self.client is None:
             self.speak_dialog("error.not.found")
             return
 
-        # Use fuzzy matching to resolve potentially misspelled names
         pokemon_name = self._resolve_pokemon_name(pokemon_name)
 
         try:
-            pokemon = self.api_client.get_pokemon(pokemon_name)
-
+            pokemon = self.client.get_pokemon(pokemon_name)
             stats = {s["stat"]["name"]: s["base_stat"] for s in pokemon["stats"]}
             types = [t["type"]["name"] for t in pokemon["types"]]
-
-            attack_tier = format_stat_childfriendly(stats.get("attack", 0))
-            speed_tier = format_stat_childfriendly(stats.get("speed", 0))
-            types_list = format_types_childfriendly(types)
-
-            types_desc = " and ".join(self._translate(t) for t in types_list)
-            attack_desc = self._translate(attack_tier)
-            speed_desc = self._translate(speed_tier)
 
             self.speak_dialog(
                 "pokemon.info",
                 {
                     "pokemon_name": pokemon["name"].capitalize(),
                     "pokedex_number": pokemon["id"],
-                    "types": types_desc,
-                    "attack_desc": attack_desc,
-                    "speed_desc": speed_desc,
+                    "types": self._format_types(format_types_childfriendly(types)),
+                    "attack_desc": self._phrase(
+                        format_stat_childfriendly(stats.get("attack", 0))
+                    ),
+                    "speed_desc": self._phrase(
+                        format_stat_childfriendly(stats.get("speed", 0))
+                    ),
                 },
             )
-
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
@@ -159,23 +139,23 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.not.found")
 
     @intent_handler(
-        IntentBuilder("GetPokemonMoves").require("MovesKeyword").require("PokemonName")
+        IntentBuilder("GetPokemonMoves")
+        .require("MovesKeyword")
+        .require("PokemonName")
     )
     def handle_get_pokemon_moves(self, message):
         pokemon_name = message.data.get("PokemonName")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
-
-        if self.api_client is None:
+        if self.client is None:
             self.speak_dialog("error.not.found")
             return
 
         pokemon_name = self._resolve_pokemon_name(pokemon_name)
 
         try:
-            pokemon = self.api_client.get_pokemon(pokemon_name)
-
+            pokemon = self.client.get_pokemon(pokemon_name)
             moves = [
                 m["move"]["name"].replace("-", " ").title()
                 for m in pokemon["moves"][:5]
@@ -183,17 +163,12 @@ class PokemonSkill(OVOSSkill):
             moves_str = (
                 ", ".join(moves[:-1]) + " and " + moves[-1]
                 if len(moves) > 1
-                else moves[0]
+                else (moves[0] if moves else "")
             )
-
             self.speak_dialog(
                 "pokemon.moves",
-                {
-                    "pokemon_name": pokemon["name"].capitalize(),
-                    "moves": moves_str,
-                },
+                {"pokemon_name": pokemon["name"].capitalize(), "moves": moves_str},
             )
-
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
@@ -202,39 +177,34 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog("error.not.found")
 
     @intent_handler(
-        IntentBuilder("GetPokemonType").require("TypeKeyword").require("PokemonName")
+        IntentBuilder("GetPokemonType")
+        .require("TypeKeyword")
+        .require("PokemonName")
     )
     def handle_get_pokemon_type(self, message):
         pokemon_name = message.data.get("PokemonName")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
-
-        if self.api_client is None:
+        if self.client is None:
             self.speak_dialog("error.not.found")
             return
 
         pokemon_name = self._resolve_pokemon_name(pokemon_name)
 
         try:
-            pokemon = self.api_client.get_pokemon(pokemon_name)
-
+            pokemon = self.client.get_pokemon(pokemon_name)
             types = [t["type"]["name"] for t in pokemon["types"]]
-            types_list = format_types_childfriendly(types)
-
-            explanation = self._get_type_advantages_for_pokemon(pokemon)
-            types_desc = " and ".join(self._translate(t) for t in types_list)
-            explanation_translated = self._format_type_explanation(explanation)
-
             self.speak_dialog(
                 "pokemon.type",
                 {
                     "pokemon_name": pokemon["name"].capitalize(),
-                    "types": types_desc,
-                    "explanation": explanation_translated,
+                    "types": self._format_types(format_types_childfriendly(types)),
+                    "explanation": self._format_type_explanation(
+                        self._get_type_advantages_for_pokemon(pokemon)
+                    ),
                 },
             )
-
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
@@ -242,52 +212,7 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon type: {e}")
             self.speak_dialog("error.not.found")
 
-    def _fetch_battle_pokemon(self, name: str) -> dict:
-        """Fetch Pokémon data for battle comparison."""
-        return self.api_client.get_pokemon(name)
-
-    def _calculate_type_advantage_score(self, types_a: list, types_b: list) -> tuple:
-        """Calculate type advantage scores for both Pokémon."""
-        score_a = 0
-        score_b = 0
-
-        for ta in types_a:
-            for tb in types_b:
-                result = get_type_advantage(ta, tb)
-                if result == "very_effective":
-                    score_a += 1
-                elif result == "not_effective":
-                    score_a -= 1
-
-        for tb in types_b:
-            for ta in types_a:
-                result = get_type_advantage(tb, ta)
-                if result == "very_effective":
-                    score_b += 1
-                elif result == "not_effective":
-                    score_b -= 1
-
-        return score_a, score_b
-
-    def _calculate_battle_score(self, stats: dict, type_score: int) -> int:
-        """Calculate total battle score from stats and type advantage."""
-        total = sum(stats.values())
-        return total + (type_score * 20)
-
-    def _determine_winner(self, score_a: int, score_b: int, name_a: str, name_b: str) -> str:
-        """Determine battle winner based on scores."""
-        if score_a > score_b + 30:
-            return name_a.capitalize()
-        elif score_b > score_a + 30:
-            return name_b.capitalize()
-        return self._translate("depends_on_moves")
-
-    @intent_handler(
-        IntentBuilder("BattleComparison")
-        .require("BattleKeyword")
-        .require("PokemonA")
-        .one_of("PokemonA", "PokemonB")
-    )
+    @intent_handler("battle.intent")
     def handle_battle_comparison(self, message):
         pokemon_a = message.data.get("PokemonA")
         pokemon_b = message.data.get("PokemonB")
@@ -295,56 +220,64 @@ class PokemonSkill(OVOSSkill):
         if not pokemon_a or not pokemon_b:
             self.speak_dialog("error.battle")
             return
-
-        if self.api_client is None:
+        if self.client is None:
             self.speak_dialog("error.not.found")
             return
 
-        # Use fuzzy matching for both Pokémon
         pokemon_a = self._resolve_pokemon_name(pokemon_a)
         pokemon_b = self._resolve_pokemon_name(pokemon_b)
 
         try:
-            pkmn_a = self._fetch_battle_pokemon(pokemon_a)
-            pkmn_b = self._fetch_battle_pokemon(pokemon_b)
-
+            pkmn_a = self.client.get_pokemon(pokemon_a)
+            pkmn_b = self.client.get_pokemon(pokemon_b)
             stats_a = {s["stat"]["name"]: s["base_stat"] for s in pkmn_a["stats"]}
             stats_b = {s["stat"]["name"]: s["base_stat"] for s in pkmn_b["stats"]}
-
             types_a = [t["type"]["name"] for t in pkmn_a["types"]]
             types_b = [t["type"]["name"] for t in pkmn_b["types"]]
 
-            type_score_a, type_score_b = self._calculate_type_advantage_score(
-                types_a, types_b
-            )
+            type_score_a, type_score_b = self._type_advantage_scores(types_a, types_b)
+            score_a = sum(stats_a.values()) + type_score_a * 20
+            score_b = sum(stats_b.values()) + type_score_b * 20
 
-            score_a = self._calculate_battle_score(stats_a, type_score_a)
-            score_b = self._calculate_battle_score(stats_b, type_score_b)
-
-            winner = self._determine_winner(
-                score_a, score_b, pkmn_a["name"], pkmn_b["name"]
-            )
-
-            types_a_list = format_types_childfriendly(types_a)
-            types_b_list = format_types_childfriendly(types_b)
-
-            types_a_desc = " and ".join(self._translate(t) for t in types_a_list)
-            types_b_desc = " and ".join(self._translate(t) for t in types_b_list)
+            if score_a > score_b + 30:
+                winner = pkmn_a["name"].capitalize()
+            elif score_b > score_a + 30:
+                winner = pkmn_b["name"].capitalize()
+            else:
+                winner = self._phrase("depends_on_moves")
 
             self.speak_dialog(
                 "battle.result",
                 {
                     "pokemon_a": pkmn_a["name"].capitalize(),
                     "pokemon_b": pkmn_b["name"].capitalize(),
-                    "type_a": types_a_desc,
-                    "type_b": types_b_desc,
+                    "type_a": self._format_types(format_types_childfriendly(types_a)),
+                    "type_b": self._format_types(format_types_childfriendly(types_b)),
                     "winner": winner,
                 },
             )
-
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
         except Exception as e:
             LOG.error(f"Failed to compare battle: {e}")
             self.speak_dialog("error.not.found")
+
+    @staticmethod
+    def _type_advantage_scores(types_a: list, types_b: list) -> tuple:
+        score_a = score_b = 0
+        for ta in types_a:
+            for tb in types_b:
+                r = get_type_advantage(ta, tb)
+                if r == "very_effective":
+                    score_a += 1
+                elif r == "not_effective":
+                    score_a -= 1
+        for tb in types_b:
+            for ta in types_a:
+                r = get_type_advantage(tb, ta)
+                if r == "very_effective":
+                    score_b += 1
+                elif r == "not_effective":
+                    score_b -= 1
+        return score_a, score_b
