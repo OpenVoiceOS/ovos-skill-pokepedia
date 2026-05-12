@@ -75,6 +75,30 @@ class TestPokeAPIClientFactory:
         client = create_api_client()
         assert isinstance(client, PokeAPIClient)
 
+    def test_get_pokemon_strips_slot_whitespace(self, monkeypatch):
+        from ovos_skill_pokepedia.api_client import PokeAPIClient
+        import ovos_skill_pokepedia.api_client as api_client
+
+        requested = []
+
+        class Response:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"name": "pikachu"}
+
+        def fake_get(url, timeout):
+            requested.append((url, timeout))
+            return Response()
+
+        monkeypatch.setattr(api_client.requests, "get", fake_get)
+
+        assert PokeAPIClient().get_pokemon(" Pikachu ") == {"name": "pikachu"}
+        assert requested == [
+            ("https://pokeapi.co/api/v2/pokemon/pikachu", PokeAPIClient.TIMEOUT)
+        ]
+
 
 class TestFuzzyMatch:
     """Fuzzy name resolution now uses ovos_utils.parse.match_one directly —
@@ -138,6 +162,11 @@ class TestSkillLocalizationHelpers:
         )
 
         assert skill._resolve_pokemon_name("salamèche") == "charmander"
+
+    def test_resolve_name_strips_slot_whitespace(self):
+        skill = self._make_skill({}, ["pikachu"])
+
+        assert skill._resolve_pokemon_name(" Pikachu ") == "pikachu"
 
     def test_localized_display_name(self):
         skill = self._make_skill(
