@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "ovos-skill-pokepedia"
 dynamic = ["version"]
 description = "OVOS Pokémon Battle Assistant Skill"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "denix" },
     { name = "OpenVoiceOS", email = "openvoiceos@gmail.com" },
@@ -15,7 +16,6 @@ authors = [
 keywords = ["ovos", "skill", "pokemon", "battle", "pokeapi"]
 requires-python = ">=3.10"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -26,6 +26,15 @@ dependencies = [
     "ovos-utils>=0.0.38",
     "ovos-workshop>=0.0.15,<9.0.0",
     "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+    "pytest-timeout>=2.0.0",
+    "requests-mock>=1.10.0",
+    "ovoscope>=0.13.0",
 ]
 
 [project.urls]
