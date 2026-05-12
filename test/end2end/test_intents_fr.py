@@ -42,6 +42,12 @@ class TestFrIntentRouting(IntentRoutingMixin, TestCase):
     def test_moves_quelles_attaques(self):
         self._assert_intent("quelles attaques pikachu", "GetPokemonMoves")
 
+    def test_moves_quelle_attaque_a_variant(self):
+        self._assert_intent("quelle attaque à bulbizar", "GetPokemonMoves")
+
+    def test_moves_quelles_attaques_a_variant(self):
+        self._assert_intent("quelles attaques a bulbizzare", "GetPokemonMoves")
+
     def test_moves_quelles_capacites(self):
         self._assert_intent("quelles capacités salamèche", "GetPokemonMoves")
 

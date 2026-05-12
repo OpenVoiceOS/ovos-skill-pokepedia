@@ -5,7 +5,24 @@ the skill via ovoscope's MiniCroft — these unit tests cover pure helpers
 (type advantages, child-friendly formatting, fuzzy matcher, API client
 constructor) where a live bus is unnecessary.
 """
+import csv
+from pathlib import Path
+
 import pytest
+
+
+LOCALE_DIR = Path(__file__).parents[1] / "ovos_skill_pokepedia" / "locale"
+
+
+def _load_phrases(lang):
+    with (LOCALE_DIR / lang / "dialog" / "phrases.value").open(
+        encoding="utf-8", newline=""
+    ) as phrases_file:
+        return {
+            key.strip(): value.strip()
+            for key, value in csv.reader(phrases_file)
+            if key.strip()
+        }
 
 
 class TestTypeAdvantage:
@@ -188,6 +205,61 @@ class TestSkillLocalizationHelpers:
         )
 
         assert skill._format_types(["normal", "flying"]) == "Normal et Vol"
+
+    @pytest.mark.parametrize(
+        ("lang", "phrases", "expected"),
+        [
+            (
+                "es-ES",
+                {
+                    "normal": "ataque medio",
+                    "normal_type": "Normal",
+                    "flying": "Volador",
+                },
+                "Normal y Volador",
+            ),
+            (
+                "it-IT",
+                {
+                    "normal": "attacco medio",
+                    "normal_type": "Normale",
+                    "flying": "Volante",
+                },
+                "Normale e Volante",
+            ),
+            (
+                "pt-PT",
+                {"normal": "ataque médio", "normal_type": "Normal", "flying": "Voador"},
+                "Normal e Voador",
+            ),
+        ],
+    )
+    def test_format_types_avoids_normal_stat_collision_in_other_locales(
+        self, lang, phrases, expected
+    ):
+        skill = self._make_skill({"phrases": phrases}, lang=lang)
+
+        assert skill._format_types(["normal", "flying"]) == expected
+
+    def test_resolve_name_without_alias_file_uses_existing_vocab(self):
+        skill = self._make_skill({}, ["pikachu", "charizard"], lang="es-ES")
+
+        assert skill._resolve_pokemon_name("charzard") == "charizard"
+
+    def test_display_name_without_locale_file_falls_back_to_canonical_title(self):
+        skill = self._make_skill({}, lang="it-IT")
+
+        assert skill._localized_pokemon_name("mr-mime") == "Mr Mime"
+
+    @pytest.mark.parametrize(
+        ("lang", "expected"),
+        [("es-ES", "Normal"), ("it-IT", "Normale"), ("pt-PT", "Normal")],
+    )
+    def test_non_french_phrase_files_distinguish_normal_type(self, lang, expected):
+        phrases = _load_phrases(lang)
+
+        assert phrases["normal_type"] == expected
+        assert phrases["normal_type"] != phrases["normal"]
 
 
 if __name__ == "__main__":
