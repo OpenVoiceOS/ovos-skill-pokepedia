@@ -86,3 +86,36 @@ class IntentRoutingMixin:
             ],
         )
         test.execute(timeout=15)
+
+    def _assert_no_intent(self, utterance: str):
+        session = Session(f"pokepedia-{self.LANG}-no-intent-{hash(utterance)}")
+        session.lang = self.LANG
+        session.pipeline = [
+            "ovos-padacioso-pipeline-plugin-high",
+            "ovos-adapt-pipeline-plugin-high",
+            "ovos-padacioso-pipeline-plugin-medium",
+            "ovos-adapt-pipeline-plugin-medium",
+            "ovos-padacioso-pipeline-plugin-low",
+            "ovos-adapt-pipeline-plugin-low",
+        ]
+        message = Message(
+            "recognizer_loop:utterance",
+            {"utterances": [utterance], "lang": self.LANG},
+            {"session": session.serialize()},
+        )
+
+        test = End2EndTest(
+            minicroft=self.minicroft,
+            skill_ids=[SKILL_ID],
+            eof_msgs=["ovos.utterance.handled"],
+            flip_points=["recognizer_loop:utterance"],
+            ignore_messages=_IGNORE,
+            source_message=message,
+            expected_messages=[
+                message,
+                Message("mycroft.audio.play_sound", {"uri": "snd/error.mp3"}),
+                Message("complete_intent_failure", {}),
+                Message("ovos.utterance.handled", {}),
+            ],
+        )
+        test.execute(timeout=15)
