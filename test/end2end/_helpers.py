@@ -12,6 +12,8 @@ SKILL_ID = "ovos-skill-pokepedia.openvoiceos"
 
 _IGNORE = [
     "speak",
+    "recognizer_loop:audio_output_start",
+    "recognizer_loop:audio_output_end",
     "ovos.common_play.stop.response",
     "common_query.openvoiceos.stop.response",
     "persona.openvoiceos.stop.response",
