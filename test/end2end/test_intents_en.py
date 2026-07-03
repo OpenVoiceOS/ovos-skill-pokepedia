@@ -12,7 +12,7 @@ from ._helpers import IntentRoutingMixin
 class TestEnIntentRouting(IntentRoutingMixin, TestCase):
     LANG = "en-US"
 
-    # --- GetPokemonInfo (TellMeKeyword + PokemonName) -----------------------
+    # --- GetPokemonInfo (tell_me + pokemon) --------------------------------
     def test_info_tell_me_about(self):
         self._assert_intent("tell me about pikachu", "GetPokemonInfo")
 
