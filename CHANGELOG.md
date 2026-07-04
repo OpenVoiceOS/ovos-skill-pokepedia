@@ -1,12 +1,21 @@
 # Changelog
 
-## [0.1.4a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.4a1) (2026-05-12)
+## [1.0.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a1) (2026-07-04)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.3...0.1.4a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.4...1.0.0a1)
+
+**Breaking changes:**
+
+- fix!: OVOS-INTENT-2 §2 compliant locale resource names [\#15](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/15) ([JarbasAl](https://github.com/JarbasAl))
 
 **Merged pull requests:**
 
-- chore: Configure Renovate [\#3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/3) ([renovate[bot]](https://github.com/apps/renovate))
+- Improve fr-FR Pokémon voice prompts [\#14](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/14) ([goldyfruit](https://github.com/goldyfruit))
+- Normalize names before PokeAPI requests [\#13](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/13) ([goldyfruit](https://github.com/goldyfruit))
+- Add French move query variants [\#12](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/12) ([goldyfruit](https://github.com/goldyfruit))
+- Keep non-French Normal type wording intact [\#10](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/10) ([goldyfruit](https://github.com/goldyfruit))
+- Fix ovoscope intent test pipeline [\#6](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/6) ([goldyfruit](https://github.com/goldyfruit))
+- Tighten fr-FR Pokédex wording and names [\#5](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/5) ([goldyfruit](https://github.com/goldyfruit))
 
 
 
