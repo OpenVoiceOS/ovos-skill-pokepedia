@@ -53,10 +53,11 @@ class IntentRoutingMixin:
     @classmethod
     def setUpClass(cls):
         LOG.set_level("DEBUG")
-        # No secondary_langs: a single-language minicroft boots in a fraction of
-        # the time it takes to train Padatious in five languages, keeping the
-        # whole e2e suite well under the CI job timeout.
-        cls.minicroft = get_minicroft([SKILL_ID])
+        # Boot in this subclass's language only (no secondary_langs): a
+        # single-language minicroft trains Padatious in one locale instead of
+        # five, so each per-locale module stays fast and the whole matrix stays
+        # well under the CI job timeout.
+        cls.minicroft = get_minicroft([SKILL_ID], lang=cls.LANG)
         loader = cls.minicroft.plugin_skills[SKILL_ID]
         skill = loader.instance
         client = MagicMock()
