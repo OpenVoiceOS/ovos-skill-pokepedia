@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a2) (2026-07-04)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a1...1.0.0a2)
+
+**Merged pull requests:**
+
+- test: restore multi-language e2e intent coverage [\#17](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/17) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.0.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a1) (2026-07-04)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.4...1.0.0a1)
