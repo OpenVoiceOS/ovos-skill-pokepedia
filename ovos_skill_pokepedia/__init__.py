@@ -75,7 +75,7 @@ class PokemonSkill(OVOSSkill):
     def _resolve_pokemon_name(self, name: str) -> str:
         """Map a (possibly misheard) Pokémon name to the closest known one.
 
-        Uses ovos_utils.parse.match_one against the loaded PokemonName.voc.
+        Uses ovos_utils.parse.match_one against the loaded pokemon.voc.
         """
         if not name:
             return name
@@ -86,7 +86,7 @@ class PokemonSkill(OVOSSkill):
         normalized_name = name.casefold()
         if normalized_name in aliases:
             return aliases[normalized_name]
-        choices = [n.lower() for n in self.voc_list("PokemonName")]
+        choices = [n.lower() for n in self.voc_list("pokemon")]
         if not choices:
             return aliases.get(normalized_name, name)
         best, score = match_one(normalized_name, choices)
@@ -140,11 +140,11 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler(
         IntentBuilder("GetPokemonInfo")
-        .require("TellMeKeyword")
-        .require("PokemonName")
+        .require("tell_me")
+        .require("pokemon")
     )
     def handle_get_pokemon_info(self, message):
-        pokemon_name = message.data.get("PokemonName")
+        pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -182,11 +182,11 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler(
         IntentBuilder("GetPokemonMoves")
-        .require("MovesKeyword")
-        .require("PokemonName")
+        .require("moves")
+        .require("pokemon")
     )
     def handle_get_pokemon_moves(self, message):
-        pokemon_name = message.data.get("PokemonName")
+        pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -223,11 +223,11 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler(
         IntentBuilder("GetPokemonType")
-        .require("TypeKeyword")
-        .require("PokemonName")
+        .require("type")
+        .require("pokemon")
     )
     def handle_get_pokemon_type(self, message):
-        pokemon_name = message.data.get("PokemonName")
+        pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -241,7 +241,7 @@ class PokemonSkill(OVOSSkill):
             pokemon = self.client.get_pokemon(pokemon_name)
             types = [t["type"]["name"] for t in pokemon["types"]]
             self.speak_dialog(
-                "pokemon.type",
+                "pokemon_type",
                 {
                     "pokemon_name": self._localized_pokemon_name(pokemon["name"]),
                     "types": self._format_types(format_types_childfriendly(types)),
@@ -259,8 +259,8 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler("battle.intent")
     def handle_battle_comparison(self, message):
-        pokemon_a = message.data.get("PokemonA")
-        pokemon_b = message.data.get("PokemonB")
+        pokemon_a = message.data.get("pokemon_a")
+        pokemon_b = message.data.get("pokemon_b")
 
         if not pokemon_a or not pokemon_b:
             self.speak_dialog("error.battle")
