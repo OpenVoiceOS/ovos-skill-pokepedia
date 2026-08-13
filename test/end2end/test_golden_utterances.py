@@ -8,15 +8,10 @@ derived from this skill's own Adapt vocab (``tell_me``/``pokemon``/
 which had no e2e coverage at all before this suite, existing
 ``test_intents_*.py`` files only covered info/type/battle).
 
-``battle.intent`` (Padatious) is listed with ``needs_manual: true`` and
-excluded from this suite's routing assertions: it hits a pre-existing,
-already-xfailed environment gap (the ``-high``/``-medium``/``-low``
-padatious pipeline matcher IDs this repo's own ``_helpers.py`` requests are
-not registered plugin entry points on this stack) documented in
-``test_intents_en.py``'s xfail reason. See also the entity-registration
-ordering fix in ``ovos_skill_pokepedia/__init__.py``'s ``initialize()``,
-which fixed a real, separate defect (``battle.intent``'s
-``{pokemon_a}``/``{pokemon_b}`` entities were never trained at all).
+See also the entity-registration ordering fix in
+``ovos_skill_pokepedia/__init__.py``'s ``initialize()``, which fixed a real,
+separate defect (``battle.intent``'s ``{pokemon_a}``/``{pokemon_b}``
+entities were never trained at all).
 
 Follows the existing ``test/end2end/_helpers.py`` infrastructure: the
 PokeAPI backend is mocked deterministically (``fixtures.fake_get_pokemon``)
@@ -43,17 +38,7 @@ from .fixtures import fake_get_pokemon
 # Per-row reason for rows marked needs_manual: true in golden_utterances.jsonl.
 # The standard requires every row to run (as a real assertion, strict-xfailed
 # with a reason if it's a known gap) rather than being silently skipped.
-_NEEDS_MANUAL_REASONS = {
-    "who wins pikachu or bulbasaur": (
-        "battle.intent routes correctly (verified: match_type observed as "
-        "'<skill_id>:battle') but the handler body never runs -- same "
-        "handler-binding gap as test_intents_en.py's "
-        "test_battle_speaks_after_padatious_match and "
-        "ovos-skill-ggwave's _HANDLER_BINDING_XFAIL. Routing-only coverage "
-        "for this utterance is in test_intents_en.py's "
-        "test_battle_routes_through_padatious (passes)."
-    ),
-}
+_NEEDS_MANUAL_REASONS = {}
 
 LANG = "en-US"
 GOLDEN_PATH = Path(__file__).parent / "golden_utterances.jsonl"
