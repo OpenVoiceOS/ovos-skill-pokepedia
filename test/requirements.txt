@@ -2,5 +2,5 @@ pytest>=7.0.0
 pytest-mock>=3.10.0
 pytest-timeout>=2.0.0
 requests-mock>=1.10.0
-ovoscope>=0.13.0
+ovoscope>=1.6.7a1
 ovos-adapt-parser>=1.0.0
