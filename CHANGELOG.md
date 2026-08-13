@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.1a1) (2026-08-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a3...1.0.1a1)
+
+**Merged pull requests:**
+
+- fix: register battle.intent entities + golden-utterance e2e suite [\#22](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/22) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.0.0a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a3) (2026-08-01)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a2...1.0.0a3)
