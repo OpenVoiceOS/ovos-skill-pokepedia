@@ -36,6 +36,7 @@ test = [
     "requests-mock>=1.10.0",
     "ovoscope>=1.5.0",
     "ovos-adapt-parser>=1.0.0",
+    "ovos-padatious>=2.0.1a1",
 ]
 
 [project.urls]
