@@ -42,6 +42,19 @@ _PADATIOUS_PIPELINE = [
 _SPOKE = {"speak", "ovos.utterance.speak"}
 
 
+def _intent_candidates(intent_name: str) -> set:
+    """Different padatious/padacioso plugin versions register the
+    matched-intent bus event under different normalizations of the
+    ``.intent`` filename basename -- observed variants include the bare
+    basename with no extension (current OVOS-INTENT-2 naming, eg.
+    ``battle`` for ``battle.intent``, see ovos-skill-parrot#119) and the
+    basename with the extension kept. Candidates cover both so tests aren't
+    pinned to whichever naming happens to be installed (same pattern as
+    ovos-skill-volume/ovos-skill-ggwave's golden suites)."""
+    base = intent_name[:-len(".intent")] if intent_name.endswith(".intent") else intent_name
+    return {f"{SKILL_ID}:{intent_name}", f"{SKILL_ID}:{base}"}
+
+
 class IntentRoutingMixin:
     """Mixin used by per-locale TestCases to assert intent routing.
 
@@ -83,18 +96,24 @@ class IntentRoutingMixin:
         cap.capture(message, timeout=15)
         return [m.msg_type for m in cap.finish()]
 
-    def _assert_intent(self, utterance: str, intent_name: str, *, padatious: bool):
+    def _assert_routes(self, utterance: str, intent_name: str, *, padatious: bool) -> list:
         pipeline = _PADATIOUS_PIPELINE if padatious else _ADAPT_PIPELINE
         types = self._capture(utterance, pipeline)
-        intent_type = f"{SKILL_ID}:{intent_name}"
-        self.assertIn(
-            intent_type, types,
-            f"{utterance!r} did not route to {intent_type} (captured: {types})",
+        candidates = _intent_candidates(intent_name)
+        self.assertTrue(
+            any(t in candidates for t in types),
+            f"{utterance!r} did not route to one of {sorted(candidates)!r} "
+            f"(captured: {types})",
         )
+        return types
+
+    def _assert_intent(self, utterance: str, intent_name: str, *, padatious: bool):
+        types = self._assert_routes(utterance, intent_name, padatious=padatious)
+        candidates = _intent_candidates(intent_name)
         self.assertTrue(
             _SPOKE.intersection(types),
-            f"{utterance!r} matched {intent_type} but the skill never spoke "
-            f"(captured: {types})",
+            f"{utterance!r} matched one of {sorted(candidates)!r} but the "
+            f"skill never spoke (captured: {types})",
         )
 
     def _assert_no_intent(self, utterance: str):
