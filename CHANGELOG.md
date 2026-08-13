@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.1a2) (2026-08-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.1a1...1.0.1a2)
+
+**Merged pull requests:**
+
+- test: bump workshop/ovoscope test floors, drop handler-binding xfails [\#24](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/24) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.0.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.1a1) (2026-08-13)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a3...1.0.1a1)
