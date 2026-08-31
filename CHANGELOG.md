@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.0a1) (2026-08-31)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.1a2...1.1.0a1)
+
+**Merged pull requests:**
+
+- test: register pokemon entity value sets and gate them end-to-end [\#26](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/26) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.0.1a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.1a2) (2026-08-13)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.1a1...1.0.1a2)
