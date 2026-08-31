@@ -11,6 +11,10 @@ This is an OpenVoiceOS (OVOS) skill for child-friendly voice queries about Poké
 - **Get Pokémon type**: "What type is [Pokemon Name]?"
 - **Battle comparison**: "Who wins between [Pokemon A] and [Pokemon B]?"
 
+## Entity hints
+
+The skill ships `locale/<lang>/intents/pokemon_a.entity` and `pokemon_b.entity`, each a full list of Pokémon names, for the `{pokemon_a}`/`{pokemon_b}` slots in the battle-comparison intent. These are hints, not a closed list: a Pokémon name not on the list still fills the slot and is looked up against the PokeAPI; listed names simply match with more confidence. `ovos-workshop` (>=9.5.0a1) registers every shipped `.entity` file automatically when the skill's language resources are loaded, so nothing needs to be configured for this.
+
 ## Installation
 
 ```bash
