@@ -28,6 +28,15 @@ class PokemonSkill(OVOSSkill):
         self.api_client: Optional[PokeAPIClient] = None
         super().__init__(*args, **kwargs)
 
+    # NOTE: no initialize() override here on purpose. The {pokemon_a}/
+    # {pokemon_b} slots of battle.intent are constrained by
+    # locale/*/intents/pokemon_a.entity and pokemon_b.entity. As of
+    # ovos-workshop 9.5.0a1, OVOSSkill auto-discovers and registers every
+    # shipped ".entity" file per language during load_lang() - see
+    # OVOSSkill._auto_register_entity_files() - so an explicit
+    # register_entity_file() call in initialize() is redundant (it would
+    # just be a no-op second registration, deduped by resolved file path).
+
     @property
     def client(self) -> PokeAPIClient:
         """Public accessor — tests / power users can swap with a mock or a
