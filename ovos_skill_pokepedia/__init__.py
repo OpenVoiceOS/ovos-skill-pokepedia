@@ -7,7 +7,6 @@ from typing import Optional
 from ovos_utils.log import LOG
 from ovos_utils.parse import match_one
 from ovos_workshop.decorators import intent_handler
-from ovos_workshop.intents import IntentBuilder
 from ovos_workshop.skills import OVOSSkill
 
 from .api_client import (
@@ -147,11 +146,7 @@ class PokemonSkill(OVOSSkill):
 
     # ------------------------------------------------------------------ intents
 
-    @intent_handler(
-        IntentBuilder("GetPokemonInfo")
-        .require("tell_me")
-        .require("pokemon")
-    )
+    @intent_handler("GetPokemonInfo.intent")
     def handle_get_pokemon_info(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
@@ -189,11 +184,7 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon info: {e}")
             self.speak_dialog("error.not.found")
 
-    @intent_handler(
-        IntentBuilder("GetPokemonMoves")
-        .require("moves")
-        .require("pokemon")
-    )
+    @intent_handler("GetPokemonMoves.intent")
     def handle_get_pokemon_moves(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
@@ -230,11 +221,7 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon moves: {e}")
             self.speak_dialog("error.not.found")
 
-    @intent_handler(
-        IntentBuilder("GetPokemonType")
-        .require("type")
-        .require("pokemon")
-    )
+    @intent_handler("GetPokemonType.intent")
     def handle_get_pokemon_type(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:

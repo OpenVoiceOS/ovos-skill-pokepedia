@@ -2,8 +2,8 @@
 
 The master ovoscope corpus carries no rows for
 ``ovos-skill-pokepedia.openvoiceos``, so ``golden_utterances.jsonl`` is
-derived from this skill's own Adapt vocab (``tell_me``/``pokemon``/
-``moves``/``type``) covering all three Adapt intents
+derived from this skill's own vocab (``tell_me``/``pokemon``/``moves``/
+``type``) covering all three Padatious file intents
 (``GetPokemonInfo``, ``GetPokemonType``, ``GetPokemonMoves`` -- the last of
 which had no e2e coverage at all before this suite, existing
 ``test_intents_*.py`` files only covered info/type/battle).
@@ -144,7 +144,10 @@ def test_pokeapi_failure_is_graceful(minicroft):
     failing_client.get_pokemon.side_effect = PokemonPokeAPIError("simulated PokeAPI outage")
     skill.api_client = failing_client
     try:
-        types = _capture(minicroft, "tell me about pikachu", "graceful-failure")
+        types = _capture(
+            minicroft, "tell me about the pokemon pikachu", "graceful-failure",
+            pipeline=_PADATIOUS_PIPELINE,
+        )
     finally:
         skill.api_client = original_client
 

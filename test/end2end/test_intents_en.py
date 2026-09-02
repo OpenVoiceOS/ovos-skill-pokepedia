@@ -1,9 +1,9 @@
 """Intent-routing coverage for en-US.
 
-One canonical utterance per intent family: an Adapt keyword intent
-(``GetPokemonInfo``), a second Adapt intent (``GetPokemonType``), and the
-Padatious file intent (``battle.intent``). Each asserts the intent routed and
-the skill spoke — a drift-immune subset, never an ordered message sequence.
+One canonical utterance per intent family: the Padatious
+``GetPokemonInfo`` and ``GetPokemonType`` file intents, and the Padatious
+``battle.intent``. Each asserts the intent routed and the skill spoke — a
+drift-immune subset, never an ordered message sequence.
 """
 from unittest import TestCase
 
@@ -13,14 +13,14 @@ from ._helpers import IntentRoutingMixin
 class TestEnIntentRouting(IntentRoutingMixin, TestCase):
     LANG = "en-US"
 
-    def test_info_routes_through_adapt(self):
+    def test_info_routes_through_padatious(self):
         self._assert_intent(
-            "tell me about pikachu", "GetPokemonInfo", padatious=False
+            "tell me about the pokemon pikachu", "GetPokemonInfo", padatious=True
         )
 
-    def test_type_routes_through_adapt(self):
+    def test_type_routes_through_padatious(self):
         self._assert_intent(
-            "what type is charizard", "GetPokemonType", padatious=False
+            "what type is the pokemon charizard", "GetPokemonType", padatious=True
         )
 
     def test_battle_routes_through_padatious(self):
