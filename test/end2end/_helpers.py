@@ -21,7 +21,7 @@ from unittest.mock import MagicMock
 from ovos_utils.log import LOG
 from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance_message
 
-from .fixtures import fake_get_pokemon
+from .fixtures import fake_get_evolution_chain, fake_get_pokemon
 
 SKILL_ID = "ovos-skill-pokepedia.openvoiceos"
 
@@ -75,6 +75,7 @@ class IntentRoutingMixin:
         skill = loader.instance
         client = MagicMock()
         client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
+        client.get_evolution_chain.side_effect = lambda name: fake_get_evolution_chain(name)
         skill.api_client = client
 
     @classmethod
@@ -83,9 +84,14 @@ class IntentRoutingMixin:
             cls.minicroft.stop()
         LOG.set_level("CRITICAL")
 
-    def _capture(self, utterance: str, pipeline):
+    def _capture_messages(self, utterance: str, pipeline, *, session_id: str = None):
+        # A caller passing an explicit `session_id` wants several `_capture`
+        # calls to share ONE multi-turn conversation (e.g. a context-fallback
+        # follow-up); otherwise each utterance gets its own session, same as
+        # before.
+        session_id = session_id or f"pokepedia-{self.LANG}-{abs(hash(utterance))}"
         session = make_session(
-            session_id=f"pokepedia-{self.LANG}-{abs(hash(utterance))}",
+            session_id=session_id,
             pipeline=pipeline,
             blacklisted_intents=[],
             blacklisted_skills=[],
@@ -94,11 +100,23 @@ class IntentRoutingMixin:
         message = make_utterance_message(utterance, lang=self.LANG, session=session)
         cap = CaptureSession(minicroft=self.minicroft)
         cap.capture(message, timeout=15)
-        return [m.msg_type for m in cap.finish()]
+        return cap.finish()
 
-    def _assert_routes(self, utterance: str, intent_name: str, *, padatious: bool) -> list:
+    def _capture(self, utterance: str, pipeline, *, session_id: str = None):
+        return [m.msg_type for m in
+                self._capture_messages(utterance, pipeline, session_id=session_id)]
+
+    def _spoken_texts(self, utterance: str, pipeline, *, session_id: str = None):
+        """Return every utterance actually spoken (``speak``/``ovos.utterance.speak``
+        payload text) for this capture, so a test can tell WHICH answer was
+        given, not just that some speak event fired."""
+        messages = self._capture_messages(utterance, pipeline, session_id=session_id)
+        return [m.data.get("utterance", "") for m in messages if m.msg_type in _SPOKE]
+
+    def _assert_routes(self, utterance: str, intent_name: str, *, padatious: bool,
+                        session_id: str = None) -> list:
         pipeline = _PADATIOUS_PIPELINE if padatious else _ADAPT_PIPELINE
-        types = self._capture(utterance, pipeline)
+        types = self._capture(utterance, pipeline, session_id=session_id)
         candidates = _intent_candidates(intent_name)
         self.assertTrue(
             any(t in candidates for t in types),
@@ -107,8 +125,10 @@ class IntentRoutingMixin:
         )
         return types
 
-    def _assert_intent(self, utterance: str, intent_name: str, *, padatious: bool):
-        types = self._assert_routes(utterance, intent_name, padatious=padatious)
+    def _assert_intent(self, utterance: str, intent_name: str, *, padatious: bool,
+                        session_id: str = None):
+        types = self._assert_routes(utterance, intent_name, padatious=padatious,
+                                     session_id=session_id)
         candidates = _intent_candidates(intent_name)
         self.assertTrue(
             _SPOKE.intersection(types),

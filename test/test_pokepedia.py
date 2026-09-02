@@ -9,6 +9,8 @@ import csv
 from pathlib import Path
 
 import pytest
+from ovos_bus_client.message import Message
+from ovos_bus_client.session import Session, SessionManager
 
 
 LOCALE_DIR = Path(__file__).parents[1] / "ovos_skill_pokepedia" / "locale"
@@ -260,6 +262,205 @@ class TestSkillLocalizationHelpers:
 
         assert phrases["normal_type"] == expected
         assert phrases["normal_type"] != phrases["normal"]
+
+
+class TestFindNextEvolution:
+    CHAIN = {
+        "species": {"name": "charmander"},
+        "evolves_to": [
+            {
+                "species": {"name": "charmeleon"},
+                "evolves_to": [
+                    {"species": {"name": "charizard"}, "evolves_to": []}
+                ],
+            }
+        ],
+    }
+
+    def test_finds_middle_stage(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "charmander") == "charmeleon"
+
+    def test_finds_final_step_from_middle(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "charmeleon") == "charizard"
+
+    def test_final_stage_returns_none(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "charizard") is None
+
+    def test_name_not_in_chain_returns_none(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "pikachu") is None
+
+    def test_case_insensitive(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "CHARMANDER") == "charmeleon"
+
+
+class _FakeEvolutionClient:
+    def __init__(self, pokemon, chain):
+        self._pokemon = pokemon
+        self._chain = chain
+
+    def get_pokemon(self, name):
+        return self._pokemon
+
+    def get_evolution_chain(self, name):
+        return self._chain
+
+
+class TestEvolutionIntentAndContextFallback:
+    """Covers GetPokemonEvolution and the prev_pokemon context fallback on
+    GetPokemonMoves/GetPokemonType/GetPokemonEvolution (issue #32), plus the
+    session isolation the context must respect: the remembered Pokémon lives
+    on the SESSION (OVOS-CONTEXT-1 ``intent_context``), never on the skill
+    instance, since one shared skill instance serves every device/session."""
+
+    @staticmethod
+    def _make_skill(client=None):
+        from ovos_skill_pokepedia import PokemonSkill
+
+        class Harness:
+            _load_name_aliases = PokemonSkill._load_name_aliases
+            _resolve_pokemon_name = PokemonSkill._resolve_pokemon_name
+            _localized_pokemon_name = PokemonSkill._localized_pokemon_name
+            _remember_pokemon = PokemonSkill._remember_pokemon
+            _pokemon_from_message = PokemonSkill._pokemon_from_message
+            _format_types = PokemonSkill._format_types
+            _join_for_speech = PokemonSkill._join_for_speech
+            _phrase = PokemonSkill._phrase
+            _format_type_explanation = PokemonSkill._format_type_explanation
+            _get_type_advantages_for_pokemon = (
+                PokemonSkill._get_type_advantages_for_pokemon
+            )
+            handle_get_pokemon_evolution = PokemonSkill.handle_get_pokemon_evolution
+            handle_get_pokemon_moves = PokemonSkill.handle_get_pokemon_moves
+            handle_get_pokemon_type = PokemonSkill.handle_get_pokemon_type
+
+            def __init__(self):
+                self.api_client = client
+                self.spoken = []
+                self.resources = _FakeResources({})
+                self.lang = "en-US"
+
+            @property
+            def client(self):
+                return self.api_client
+
+            def voc_list(self, name):
+                return []
+
+            def speak_dialog(self, key, data=None):
+                self.spoken.append((key, data or {}))
+
+        return Harness()
+
+    @staticmethod
+    def _msg(session_id, data=None):
+        """Build a Message carrying the CURRENT live session for
+        ``session_id`` (or a fresh one), mirroring how a real bus round trip
+        re-serializes the live session onto every outgoing message."""
+        session = SessionManager.sessions.get(session_id) or Session(session_id)
+        return Message("intent", data or {}, {"session": session.serialize()})
+
+    def test_evolution_speaks_next_stage(self):
+        chain = {
+            "species": {"name": "charmander"},
+            "evolves_to": [
+                {"species": {"name": "charmeleon"}, "evolves_to": []}
+            ],
+        }
+        skill = self._make_skill(
+            _FakeEvolutionClient({"name": "charmander"}, chain)
+        )
+        session_id = "evo-1"
+        skill.handle_get_pokemon_evolution(self._msg(session_id, {"pokemon": "charmander"}))
+
+        assert skill.spoken == [
+            ("evolution", {"pokemon": "Charmander", "evolution": "Charmeleon"})
+        ]
+        session = SessionManager.sessions.get(session_id)
+        entry = session.intent_context.get("prev_pokemon")
+        assert entry == {"value": "charmander", "turns_remaining": 3}
+
+    def test_evolution_speaks_final_stage_dialog(self):
+        chain = {"species": {"name": "charizard"}, "evolves_to": []}
+        skill = self._make_skill(
+            _FakeEvolutionClient({"name": "charizard"}, chain)
+        )
+        skill.handle_get_pokemon_evolution(
+            self._msg("evo-2", {"pokemon": "charizard"})
+        )
+
+        assert skill.spoken == [("evolution.final", {"pokemon": "Charizard"})]
+
+    def test_evolution_without_pokemon_or_context_speaks_error(self):
+        skill = self._make_skill(_FakeEvolutionClient({}, {}))
+        skill.handle_get_pokemon_evolution(self._msg("evo-3"))
+
+        assert skill.spoken == [("error.no.pokemon", {})]
+
+    def test_moves_falls_back_to_prev_pokemon_context(self):
+        pokemon = {
+            "name": "pikachu",
+            "moves": [{"move": {"name": "thunderbolt"}}],
+        }
+        skill = self._make_skill(_FakeEvolutionClient(pokemon, {}))
+        session_id = "moves-context-1"
+        skill._remember_pokemon("pikachu", self._msg(session_id))
+
+        skill.handle_get_pokemon_moves(self._msg(session_id))
+
+        assert skill.spoken == [
+            ("pokemon.moves", {"pokemon_name": "Pikachu", "moves": "Thunderbolt"})
+        ]
+
+    def test_moves_without_pokemon_or_context_speaks_error(self):
+        skill = self._make_skill(_FakeEvolutionClient({}, {}))
+
+        skill.handle_get_pokemon_moves(self._msg("moves-context-2"))
+
+        assert skill.spoken == [("error.no.pokemon", {})]
+
+    def test_explicit_pokemon_slot_wins_over_stale_context(self):
+        pokemon = {
+            "name": "bulbasaur",
+            "moves": [{"move": {"name": "vine-whip"}}],
+        }
+        skill = self._make_skill(_FakeEvolutionClient(pokemon, {}))
+        session_id = "moves-context-3"
+        skill._remember_pokemon("charmander", self._msg(session_id))
+
+        skill.handle_get_pokemon_moves(self._msg(session_id, {"pokemon": "bulbasaur"}))
+
+        assert skill.spoken == [
+            ("pokemon.moves", {"pokemon_name": "Bulbasaur", "moves": "Vine Whip"})
+        ]
+        session = SessionManager.sessions.get(session_id)
+        assert session.intent_context.get("prev_pokemon") == {
+            "value": "bulbasaur", "turns_remaining": 3,
+        }
+
+    def test_prev_pokemon_context_is_session_isolated(self):
+        """Reviewer repro (issue #32 follow-up): two DIFFERENT sessions must
+        never share a remembered Pokémon. Session A looks up Charmander;
+        session B's "what about its moves" (no {pokemon} slot) must NOT
+        resolve to Charmander, since B never looked anything up."""
+        chain = {"species": {"name": "charmander"}, "evolves_to": []}
+        skill = self._make_skill(_FakeEvolutionClient({"name": "charmander"}, chain))
+        session_a, session_b = "device-a", "device-b"
+
+        skill.handle_get_pokemon_evolution(self._msg(session_a, {"pokemon": "charmander"}))
+        assert skill.spoken[-1] == ("evolution.final", {"pokemon": "Charmander"})
+
+        skill.spoken.clear()
+        skill.handle_get_pokemon_moves(self._msg(session_b))
+
+        assert skill.spoken == [("error.no.pokemon", {})], (
+            "device B resolved device A's remembered Pokémon "
+            f"instead of erroring: {skill.spoken}"
+        )
 
 
 if __name__ == "__main__":

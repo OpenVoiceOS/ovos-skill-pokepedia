@@ -4,6 +4,7 @@ Child-friendly voice skill for querying Pokémon data and battle predictions.
 """
 from typing import Optional
 
+from ovos_bus_client.session import SessionManager
 from ovos_utils.log import LOG
 from ovos_utils.parse import match_one
 from ovos_workshop.decorators import intent_handler
@@ -14,10 +15,20 @@ from .api_client import (
     PokemonPokeAPIError,
     TYPE_ADVANTAGES,
     create_api_client,
+    find_next_evolution,
     format_stat_childfriendly,
     format_types_childfriendly,
     get_type_advantage,
 )
+
+# OVOS-CONTEXT-1 shared-scope key holding the last Pokémon successfully
+# looked up, so a follow-up ("what about its moves?") can resolve without
+# repeating the name. This lives on the SESSION (SessionManager.get(message)
+# .intent_context), never on the skill instance: the skill is a single
+# shared object serving every device/session, so a `self._prev_pokemon`
+# attribute would leak one session's last-looked-up Pokémon into every
+# other concurrent session's follow-up query.
+PREV_POKEMON_CONTEXT = "prev_pokemon"
 
 
 class PokemonSkill(OVOSSkill):
@@ -100,6 +111,27 @@ class PokemonSkill(OVOSSkill):
         best, score = match_one(normalized_name, choices)
         return aliases.get(best.casefold(), best) if score >= 0.6 else name
 
+    def _remember_pokemon(self, name: str, message) -> None:
+        """Track the last successfully looked-up Pokémon so a follow-up
+        query ("what about its moves?") can resolve without repeating the
+        name, via the session-scoped ``prev_pokemon`` intent context."""
+        session = SessionManager.get(message)
+        session.set_intent_context(PREV_POKEMON_CONTEXT, name,
+                                    scope="shared", turns_remaining=3)
+
+    def _pokemon_from_message(self, message) -> Optional[str]:
+        """Return the ``pokemon`` slot from the message, falling back to
+        the last remembered Pokémon (set by ``_remember_pokemon`` on THIS
+        message's session) when the slot is absent."""
+        slot = message.data.get("pokemon")
+        if slot:
+            return slot
+        session = SessionManager.get(message)
+        entry = (session.intent_context or {}).get(PREV_POKEMON_CONTEXT)
+        if isinstance(entry, dict) and entry.get("value"):
+            return entry["value"]
+        return None
+
     def _format_types(self, types_list) -> str:
         localized = []
         for type_name in types_list:
@@ -177,6 +209,7 @@ class PokemonSkill(OVOSSkill):
                     ),
                 },
             )
+            self._remember_pokemon(pokemon_name, message)
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
@@ -186,7 +219,7 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler("GetPokemonMoves.intent")
     def handle_get_pokemon_moves(self, message):
-        pokemon_name = message.data.get("pokemon")
+        pokemon_name = self._pokemon_from_message(message)
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -214,6 +247,7 @@ class PokemonSkill(OVOSSkill):
                     "moves": moves_str,
                 },
             )
+            self._remember_pokemon(pokemon_name, message)
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
@@ -223,7 +257,7 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler("GetPokemonType.intent")
     def handle_get_pokemon_type(self, message):
-        pokemon_name = message.data.get("pokemon")
+        pokemon_name = self._pokemon_from_message(message)
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -246,11 +280,47 @@ class PokemonSkill(OVOSSkill):
                     ),
                 },
             )
+            self._remember_pokemon(pokemon_name, message)
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
             self.speak_dialog("error.not.found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon type: {e}")
+            self.speak_dialog("error.not.found")
+
+    @intent_handler("GetPokemonEvolution.intent")
+    def handle_get_pokemon_evolution(self, message):
+        pokemon_name = self._pokemon_from_message(message)
+        if not pokemon_name:
+            self.speak_dialog("error.no.pokemon")
+            return
+        if self.client is None:
+            self.speak_dialog("error.not.found")
+            return
+
+        pokemon_name = self._resolve_pokemon_name(pokemon_name)
+
+        try:
+            pokemon = self.client.get_pokemon(pokemon_name)
+            chain = self.client.get_evolution_chain(pokemon_name)
+            next_name = find_next_evolution(chain, pokemon["name"])
+            pokemon_display = self._localized_pokemon_name(pokemon["name"])
+            if next_name:
+                self.speak_dialog(
+                    "evolution",
+                    {
+                        "pokemon": pokemon_display,
+                        "evolution": self._localized_pokemon_name(next_name),
+                    },
+                )
+            else:
+                self.speak_dialog("evolution.final", {"pokemon": pokemon_display})
+            self._remember_pokemon(pokemon_name, message)
+        except PokemonPokeAPIError as e:
+            LOG.error(f"Pokemon API error: {e}")
+            self.speak_dialog("error.not.found")
+        except Exception as e:
+            LOG.error(f"Failed to get Pokemon evolution: {e}")
             self.speak_dialog("error.not.found")
 
     @intent_handler("battle.intent")
