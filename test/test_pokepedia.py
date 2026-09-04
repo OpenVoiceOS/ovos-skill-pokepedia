@@ -6,11 +6,13 @@ the skill via ovoscope's MiniCroft — these unit tests cover pure helpers
 constructor) where a live bus is unnecessary.
 """
 import csv
+import uuid
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from ovos_bus_client.message import Message
-from ovos_bus_client.session import Session, SessionManager
+from ovos_bus_client.session import SessionManager
 
 
 LOCALE_DIR = Path(__file__).parents[1] / "ovos_skill_pokepedia" / "locale"
@@ -315,7 +317,18 @@ class TestEvolutionIntentAndContextFallback:
     GetPokemonMoves/GetPokemonType/GetPokemonEvolution (issue #32), plus the
     session isolation the context must respect: the remembered Pokémon lives
     on the SESSION (OVOS-CONTEXT-1 ``intent_context``), never on the skill
-    instance, since one shared skill instance serves every device/session."""
+    instance, since one shared skill instance serves every device/session.
+
+    This harness has no real bus (see the module docstring: pure-helper
+    coverage lives here, real dispatch lives in ``test/end2end/``), so there
+    is no ``ovos.utterance.speak``/``mycroft.skill.handler.complete`` wire to
+    listen on. The next best thing to reading the orchestrator's private
+    ``SessionManager.sessions`` registry is capturing the exact ``Session``
+    object the handler itself asked for and mutated, via a spy on the same
+    public ``SessionManager.get(message)`` call the skill code makes — never
+    the registry it is backed by. That captured session's serialized form is
+    then explicitly re-declared as the next turn's message context, exactly
+    as a real client would re-declare a session id."""
 
     @staticmethod
     def _make_skill(client=None):
@@ -357,12 +370,34 @@ class TestEvolutionIntentAndContextFallback:
         return Harness()
 
     @staticmethod
-    def _msg(session_id, data=None):
-        """Build a Message carrying the CURRENT live session for
-        ``session_id`` (or a fresh one), mirroring how a real bus round trip
-        re-serializes the live session onto every outgoing message."""
-        session = SessionManager.sessions.get(session_id) or Session(session_id)
-        return Message("intent", data or {}, {"session": session.serialize()})
+    def _msg(session=None, data=None):
+        """Build a Message declaring ``session`` (a serialized session dict
+        captured from a previous turn), or a fresh client-chosen session id
+        when omitted - never one pulled from the orchestrator's registry."""
+        session = session or {"session_id": f"poke-{uuid.uuid4()}"}
+        return Message("intent", data or {}, {"session": session})
+
+    @staticmethod
+    def _call(handler, message):
+        """Call ``handler(message)`` and capture the ``Session`` object the
+        handler itself obtained via ``SessionManager.get(message)`` - the
+        same call the skill code makes internally - by spying on that public
+        entry point rather than reading the registry after the fact.
+
+        Returns the session's serialized form for re-declaring on the next
+        turn.
+        """
+        captured = {}
+        real_get = SessionManager.get
+
+        def _spy_get(msg=None):
+            session = real_get(msg)
+            captured["session"] = session
+            return session
+
+        with mock.patch("ovos_skill_pokepedia.SessionManager.get", side_effect=_spy_get):
+            handler(message)
+        return captured["session"].serialize() if captured.get("session") else None
 
     def test_evolution_speaks_next_stage(self):
         chain = {
@@ -374,14 +409,15 @@ class TestEvolutionIntentAndContextFallback:
         skill = self._make_skill(
             _FakeEvolutionClient({"name": "charmander"}, chain)
         )
-        session_id = "evo-1"
-        skill.handle_get_pokemon_evolution(self._msg(session_id, {"pokemon": "charmander"}))
+        session = self._call(
+            skill.handle_get_pokemon_evolution,
+            self._msg(data={"pokemon": "charmander"}),
+        )
 
         assert skill.spoken == [
             ("evolution", {"pokemon": "Charmander", "evolution": "Charmeleon"})
         ]
-        session = SessionManager.sessions.get(session_id)
-        entry = session.intent_context.get("prev_pokemon")
+        entry = session["intent_context"].get("prev_pokemon")
         assert entry == {"value": "charmander", "turns_remaining": 3}
 
     def test_evolution_speaks_final_stage_dialog(self):
@@ -390,14 +426,14 @@ class TestEvolutionIntentAndContextFallback:
             _FakeEvolutionClient({"name": "charizard"}, chain)
         )
         skill.handle_get_pokemon_evolution(
-            self._msg("evo-2", {"pokemon": "charizard"})
+            self._msg(data={"pokemon": "charizard"})
         )
 
         assert skill.spoken == [("evolution.final", {"pokemon": "Charizard"})]
 
     def test_evolution_without_pokemon_or_context_speaks_error(self):
         skill = self._make_skill(_FakeEvolutionClient({}, {}))
-        skill.handle_get_pokemon_evolution(self._msg("evo-3"))
+        skill.handle_get_pokemon_evolution(self._msg())
 
         assert skill.spoken == [("error.no.pokemon", {})]
 
@@ -407,10 +443,10 @@ class TestEvolutionIntentAndContextFallback:
             "moves": [{"move": {"name": "thunderbolt"}}],
         }
         skill = self._make_skill(_FakeEvolutionClient(pokemon, {}))
-        session_id = "moves-context-1"
-        skill._remember_pokemon("pikachu", self._msg(session_id))
+        session = self._call(
+            lambda m: skill._remember_pokemon("pikachu", m), self._msg())
 
-        skill.handle_get_pokemon_moves(self._msg(session_id))
+        skill.handle_get_pokemon_moves(self._msg(session=session))
 
         assert skill.spoken == [
             ("pokemon.moves", {"pokemon_name": "Pikachu", "moves": "Thunderbolt"})
@@ -419,7 +455,7 @@ class TestEvolutionIntentAndContextFallback:
     def test_moves_without_pokemon_or_context_speaks_error(self):
         skill = self._make_skill(_FakeEvolutionClient({}, {}))
 
-        skill.handle_get_pokemon_moves(self._msg("moves-context-2"))
+        skill.handle_get_pokemon_moves(self._msg())
 
         assert skill.spoken == [("error.no.pokemon", {})]
 
@@ -429,16 +465,18 @@ class TestEvolutionIntentAndContextFallback:
             "moves": [{"move": {"name": "vine-whip"}}],
         }
         skill = self._make_skill(_FakeEvolutionClient(pokemon, {}))
-        session_id = "moves-context-3"
-        skill._remember_pokemon("charmander", self._msg(session_id))
+        session = self._call(
+            lambda m: skill._remember_pokemon("charmander", m), self._msg())
 
-        skill.handle_get_pokemon_moves(self._msg(session_id, {"pokemon": "bulbasaur"}))
+        session = self._call(
+            skill.handle_get_pokemon_moves,
+            self._msg(session=session, data={"pokemon": "bulbasaur"}),
+        )
 
         assert skill.spoken == [
             ("pokemon.moves", {"pokemon_name": "Bulbasaur", "moves": "Vine Whip"})
         ]
-        session = SessionManager.sessions.get(session_id)
-        assert session.intent_context.get("prev_pokemon") == {
+        assert session["intent_context"].get("prev_pokemon") == {
             "value": "bulbasaur", "turns_remaining": 3,
         }
 
@@ -449,13 +487,12 @@ class TestEvolutionIntentAndContextFallback:
         resolve to Charmander, since B never looked anything up."""
         chain = {"species": {"name": "charmander"}, "evolves_to": []}
         skill = self._make_skill(_FakeEvolutionClient({"name": "charmander"}, chain))
-        session_a, session_b = "device-a", "device-b"
 
-        skill.handle_get_pokemon_evolution(self._msg(session_a, {"pokemon": "charmander"}))
+        skill.handle_get_pokemon_evolution(self._msg(data={"pokemon": "charmander"}))
         assert skill.spoken[-1] == ("evolution.final", {"pokemon": "Charmander"})
 
         skill.spoken.clear()
-        skill.handle_get_pokemon_moves(self._msg(session_b))
+        skill.handle_get_pokemon_moves(self._msg())
 
         assert skill.spoken == [("error.no.pokemon", {})], (
             "device B resolved device A's remembered Pokémon "
