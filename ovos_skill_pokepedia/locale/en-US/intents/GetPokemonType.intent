@@ -2,3 +2,5 @@ what type is the pokemon {pokemon}
 what (is the type|are the types) of the pokemon {pokemon}
 type[s] of the pokemon {pokemon}
 the pokemon {pokemon} is of what type
+what (is|about) its type
+what type is it
