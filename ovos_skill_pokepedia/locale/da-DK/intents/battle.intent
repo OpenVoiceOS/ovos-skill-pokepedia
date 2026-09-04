@@ -1,0 +1,4 @@
+hvem (vinder|ville vinde) [mellem] {pokemon_a} (og|eller|mod|versus) {pokemon_b}
+hvem er stærkest {pokemon_a} (eller|mod|versus) {pokemon_b}
+(kæmp|slås|sammenlign) [mellem] {pokemon_a} (og|mod|versus) {pokemon_b}
+{pokemon_a} (mod|versus) {pokemon_b}
