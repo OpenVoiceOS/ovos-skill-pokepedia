@@ -27,11 +27,17 @@ class PokemonSkill(OVOSSkill):
         self.api_client: Optional[PokeAPIClient] = None
         super().__init__(*args, **kwargs)
 
-    # NOTE: no initialize() override here on purpose. The {pokemon_a}/
-    # {pokemon_b} slots of battle.intent are constrained by
-    # locale/*/intents/pokemon_a.entity and pokemon_b.entity. As of
-    # ovos-workshop 9.5.0a1, OVOSSkill auto-discovers and registers every
-    # shipped ".entity" file per language during load_lang() - see
+    # NOTE: no initialize() override here on purpose. Padatious ".entity"
+    # files are training HINTS, not runtime constraints - once trained,
+    # padatious happily generalizes {pokemon_a}/{pokemon_b} to match ANY
+    # word ("who wins, banana or carrot"). battle.intent therefore only
+    # anchors the *structure* of the utterance ("who wins X or Y"); the
+    # actual pokemon names are extracted at runtime in
+    # handle_battle_comparison() via voc_match_span() against the closed
+    # pokemon.voc vocabulary, which cannot match anything outside the
+    # ~1000 real pokemon names. As of ovos-workshop 9.5.0a1, OVOSSkill
+    # auto-discovers and registers every shipped ".entity" file per
+    # language during load_lang() - see
     # OVOSSkill._auto_register_entity_files() - so an explicit
     # register_entity_file() call in initialize() is redundant (it would
     # just be a no-op second registration, deduped by resolved file path).
@@ -255,12 +261,21 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler("battle.intent")
     def handle_battle_comparison(self, message):
-        pokemon_a = message.data.get("pokemon_a")
-        pokemon_b = message.data.get("pokemon_b")
-
-        if not pokemon_a or not pokemon_b:
-            self.speak_dialog("error.battle")
+        # {pokemon_a}/{pokemon_b} are free padatious slots and generalize to
+        # ANY word ("who wins, banana or carrot" matches the template just
+        # fine). Gate on the closed pokemon.voc vocabulary instead: only
+        # real pokemon names can appear in the returned spans, in the order
+        # they occur in the utterance, so hits[0] is always "A" and hits[1]
+        # is always "B" regardless of which free slot padatious happened to
+        # bind them to.
+        utterance = message.data.get("utterance", "")
+        hits = self.voc_match_span(utterance, "pokemon")
+        names = [hit[0] for hit in hits]
+        if len(names) < 2:
+            LOG.info(f"battle.intent matched but no pokemon pair found in {utterance!r}, declining")
             return
+        pokemon_a, pokemon_b = names[0], names[1]
+
         if self.client is None:
             self.speak_dialog("error.not.found")
             return
