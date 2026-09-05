@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
     "ovos-utils>=0.0.38",
-    "ovos-workshop>=9.5.0a1,<10.0.0",
+    "ovos-workshop>=9.6.7a3,<10.0.0",
     "requests>=2.31.0",
 ]
 
