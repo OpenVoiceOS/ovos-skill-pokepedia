@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.1a1) (2026-09-05)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.0a3...1.1.1a1)
+
+**Merged pull requests:**
+
+- fix: gate battle.intent on the closed pokemon vocabulary [\#35](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/35) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.1.0a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.0a3) (2026-09-02)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.0a2...1.1.0a3)
