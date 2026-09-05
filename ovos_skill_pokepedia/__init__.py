@@ -7,7 +7,6 @@ from typing import Optional
 from ovos_utils.log import LOG
 from ovos_utils.parse import match_one
 from ovos_workshop.decorators import intent_handler
-from ovos_workshop.intents import IntentBuilder
 from ovos_workshop.skills import OVOSSkill
 
 from .api_client import (
@@ -27,6 +26,21 @@ class PokemonSkill(OVOSSkill):
     def __init__(self, *args, **kwargs):
         self.api_client: Optional[PokeAPIClient] = None
         super().__init__(*args, **kwargs)
+
+    # NOTE: no initialize() override here on purpose. Padatious ".entity"
+    # files are training HINTS, not runtime constraints - once trained,
+    # padatious happily generalizes {pokemon_a}/{pokemon_b} to match ANY
+    # word ("who wins, banana or carrot"). battle.intent therefore only
+    # anchors the *structure* of the utterance ("who wins X or Y"); the
+    # actual pokemon names are extracted at runtime in
+    # handle_battle_comparison() via voc_match_span() against the closed
+    # pokemon.voc vocabulary, which cannot match anything outside the
+    # ~1000 real pokemon names. As of ovos-workshop 9.5.0a1, OVOSSkill
+    # auto-discovers and registers every shipped ".entity" file per
+    # language during load_lang() - see
+    # OVOSSkill._auto_register_entity_files() - so an explicit
+    # register_entity_file() call in initialize() is redundant (it would
+    # just be a no-op second registration, deduped by resolved file path).
 
     @property
     def client(self) -> PokeAPIClient:
@@ -56,21 +70,63 @@ class PokemonSkill(OVOSSkill):
 
     # --------------------------------------------------------------- helpers
 
+    def _load_name_aliases(self) -> dict:
+        """Load localized Pokémon-name aliases mapped to PokeAPI slugs."""
+        try:
+            mapping = self.resources.load_named_value_file("pokemon.name.aliases")
+        except Exception:
+            mapping = {}
+        return {alias.casefold(): canonical for alias, canonical in mapping.items()}
+
+    def _localized_pokemon_name(self, canonical_name: str) -> str:
+        """Return the active locale's display name for a PokeAPI slug."""
+        try:
+            mapping = self.resources.load_named_value_file("pokemon.name.display")
+        except Exception:
+            mapping = {}
+        return mapping.get(canonical_name, canonical_name.replace("-", " ").title())
+
     def _resolve_pokemon_name(self, name: str) -> str:
         """Map a (possibly misheard) Pokémon name to the closest known one.
 
-        Uses ovos_utils.parse.match_one against the loaded PokemonName.voc.
+        Uses ovos_utils.parse.match_one against the loaded pokemon.voc.
         """
         if not name:
             return name
-        choices = [n.lower() for n in self.voc_list("PokemonName")]
-        if not choices:
+        name = str(name).strip()
+        if not name:
             return name
-        best, score = match_one(name.lower(), choices)
-        return best if score >= 0.6 else name
+        aliases = self._load_name_aliases()
+        normalized_name = name.casefold()
+        if normalized_name in aliases:
+            return aliases[normalized_name]
+        choices = [n.lower() for n in self.voc_list("pokemon")]
+        if not choices:
+            return aliases.get(normalized_name, name)
+        best, score = match_one(normalized_name, choices)
+        return aliases.get(best.casefold(), best) if score >= 0.6 else name
 
     def _format_types(self, types_list) -> str:
-        return " and ".join(self._phrase(t) for t in types_list)
+        localized = []
+        for type_name in types_list:
+            type_phrase = self._phrase(f"{type_name}_type")
+            if type_phrase == f"{type_name}_type":
+                type_phrase = self._phrase(type_name)
+            localized.append(type_phrase)
+        return self._join_for_speech(localized)
+
+    def _join_for_speech(self, items: list) -> str:
+        """Join short localized labels naturally for TTS."""
+        if not items:
+            return ""
+        if len(items) == 1:
+            return items[0]
+        conjunction = self._phrase("list_conjunction")
+        if conjunction == "list_conjunction":
+            conjunction = {"es": "y", "fr": "et", "it": "e", "pt": "e"}.get(
+                self.lang.split("-")[0].lower(), "and"
+            )
+        return f"{', '.join(items[:-1])} {conjunction} {items[-1]}"
 
     def _get_type_advantages_for_pokemon(self, pokemon: dict) -> list:
         types = [t["type"]["name"] for t in pokemon["types"]]
@@ -96,13 +152,9 @@ class PokemonSkill(OVOSSkill):
 
     # ------------------------------------------------------------------ intents
 
-    @intent_handler(
-        IntentBuilder("GetPokemonInfo")
-        .require("TellMeKeyword")
-        .require("PokemonName")
-    )
+    @intent_handler("GetPokemonInfo.intent")
     def handle_get_pokemon_info(self, message):
-        pokemon_name = message.data.get("PokemonName")
+        pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -120,7 +172,7 @@ class PokemonSkill(OVOSSkill):
             self.speak_dialog(
                 "pokemon.info",
                 {
-                    "pokemon_name": pokemon["name"].capitalize(),
+                    "pokemon_name": self._localized_pokemon_name(pokemon["name"]),
                     "pokedex_number": pokemon["id"],
                     "types": self._format_types(format_types_childfriendly(types)),
                     "attack_desc": self._phrase(
@@ -138,13 +190,9 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon info: {e}")
             self.speak_dialog("error.not.found")
 
-    @intent_handler(
-        IntentBuilder("GetPokemonMoves")
-        .require("MovesKeyword")
-        .require("PokemonName")
-    )
+    @intent_handler("GetPokemonMoves.intent")
     def handle_get_pokemon_moves(self, message):
-        pokemon_name = message.data.get("PokemonName")
+        pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -161,13 +209,16 @@ class PokemonSkill(OVOSSkill):
                 for m in pokemon["moves"][:5]
             ]
             moves_str = (
-                ", ".join(moves[:-1]) + " and " + moves[-1]
+                self._join_for_speech(moves)
                 if len(moves) > 1
                 else (moves[0] if moves else "")
             )
             self.speak_dialog(
                 "pokemon.moves",
-                {"pokemon_name": pokemon["name"].capitalize(), "moves": moves_str},
+                {
+                    "pokemon_name": self._localized_pokemon_name(pokemon["name"]),
+                    "moves": moves_str,
+                },
             )
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
@@ -176,13 +227,9 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon moves: {e}")
             self.speak_dialog("error.not.found")
 
-    @intent_handler(
-        IntentBuilder("GetPokemonType")
-        .require("TypeKeyword")
-        .require("PokemonName")
-    )
+    @intent_handler("GetPokemonType.intent")
     def handle_get_pokemon_type(self, message):
-        pokemon_name = message.data.get("PokemonName")
+        pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
             self.speak_dialog("error.no.pokemon")
             return
@@ -196,9 +243,9 @@ class PokemonSkill(OVOSSkill):
             pokemon = self.client.get_pokemon(pokemon_name)
             types = [t["type"]["name"] for t in pokemon["types"]]
             self.speak_dialog(
-                "pokemon.type",
+                "pokemon_type",
                 {
-                    "pokemon_name": pokemon["name"].capitalize(),
+                    "pokemon_name": self._localized_pokemon_name(pokemon["name"]),
                     "types": self._format_types(format_types_childfriendly(types)),
                     "explanation": self._format_type_explanation(
                         self._get_type_advantages_for_pokemon(pokemon)
@@ -214,12 +261,21 @@ class PokemonSkill(OVOSSkill):
 
     @intent_handler("battle.intent")
     def handle_battle_comparison(self, message):
-        pokemon_a = message.data.get("PokemonA")
-        pokemon_b = message.data.get("PokemonB")
-
-        if not pokemon_a or not pokemon_b:
-            self.speak_dialog("error.battle")
+        # {pokemon_a}/{pokemon_b} are free padatious slots and generalize to
+        # ANY word ("who wins, banana or carrot" matches the template just
+        # fine). Gate on the closed pokemon.voc vocabulary instead: only
+        # real pokemon names can appear in the returned spans, in the order
+        # they occur in the utterance, so hits[0] is always "A" and hits[1]
+        # is always "B" regardless of which free slot padatious happened to
+        # bind them to.
+        utterance = message.data.get("utterance", "")
+        hits = self.voc_match_span(utterance, "pokemon")
+        names = [hit[0] for hit in hits]
+        if len(names) < 2:
+            LOG.info(f"battle.intent matched but no pokemon pair found in {utterance!r}, declining")
             return
+        pokemon_a, pokemon_b = names[0], names[1]
+
         if self.client is None:
             self.speak_dialog("error.not.found")
             return
@@ -240,17 +296,17 @@ class PokemonSkill(OVOSSkill):
             score_b = sum(stats_b.values()) + type_score_b * 20
 
             if score_a > score_b + 30:
-                winner = pkmn_a["name"].capitalize()
+                winner = self._localized_pokemon_name(pkmn_a["name"])
             elif score_b > score_a + 30:
-                winner = pkmn_b["name"].capitalize()
+                winner = self._localized_pokemon_name(pkmn_b["name"])
             else:
                 winner = self._phrase("depends_on_moves")
 
             self.speak_dialog(
                 "battle.result",
                 {
-                    "pokemon_a": pkmn_a["name"].capitalize(),
-                    "pokemon_b": pkmn_b["name"].capitalize(),
+                    "pokemon_a": self._localized_pokemon_name(pkmn_a["name"]),
+                    "pokemon_b": self._localized_pokemon_name(pkmn_b["name"]),
                     "type_a": self._format_types(format_types_childfriendly(types_a)),
                     "type_b": self._format_types(format_types_childfriendly(types_b)),
                     "winner": winner,

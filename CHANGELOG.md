@@ -1,12 +1,85 @@
 # Changelog
 
-## [0.1.4a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/0.1.4a1) (2026-05-12)
+## [1.1.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.1a1) (2026-09-05)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.3...0.1.4a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.0a3...1.1.1a1)
 
 **Merged pull requests:**
 
-- chore: Configure Renovate [\#3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/3) ([renovate[bot]](https://github.com/apps/renovate))
+- fix: gate battle.intent on the closed pokemon vocabulary [\#35](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/35) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.1.0a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.0a3) (2026-09-02)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.0a2...1.1.0a3)
+
+**Merged pull requests:**
+
+- refactor: migrate adapt intents to intent files [\#30](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/30) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.1.0a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.0a2) (2026-08-31)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.0a1...1.1.0a2)
+
+**Merged pull requests:**
+
+- docs: describe entity value hints [\#28](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/28) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.1.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.0a1) (2026-08-31)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.1a2...1.1.0a1)
+
+**Merged pull requests:**
+
+- test: register pokemon entity value sets and gate them end-to-end [\#26](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/26) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.0.1a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.1a2) (2026-08-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.1a1...1.0.1a2)
+
+**Merged pull requests:**
+
+- test: bump workshop/ovoscope test floors, drop handler-binding xfails [\#24](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/24) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.0.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.1a1) (2026-08-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a3...1.0.1a1)
+
+**Merged pull requests:**
+
+- fix: register battle.intent entities + golden-utterance e2e suite [\#22](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/22) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.0.0a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a3) (2026-08-01)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a2...1.0.0a3)
+
+**Merged pull requests:**
+
+- docs: rewrite README in Simplified Technical English [\#20](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/20) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.0.0a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a2) (2026-07-04)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.0.0a1...1.0.0a2)
+
+**Merged pull requests:**
+
+- test: restore multi-language e2e intent coverage [\#17](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/17) ([JarbasAl](https://github.com/JarbasAl))
+
+## [1.0.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.0.0a1) (2026-07-04)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/0.1.4...1.0.0a1)
+
+**Breaking changes:**
+
+- fix!: OVOS-INTENT-2 §2 compliant locale resource names [\#15](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/15) ([JarbasAl](https://github.com/JarbasAl))
+
+**Merged pull requests:**
+
+- Improve fr-FR Pokémon voice prompts [\#14](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/14) ([goldyfruit](https://github.com/goldyfruit))
+- Normalize names before PokeAPI requests [\#13](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/13) ([goldyfruit](https://github.com/goldyfruit))
+- Add French move query variants [\#12](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/12) ([goldyfruit](https://github.com/goldyfruit))
+- Keep non-French Normal type wording intact [\#10](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/10) ([goldyfruit](https://github.com/goldyfruit))
+- Fix ovoscope intent test pipeline [\#6](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/6) ([goldyfruit](https://github.com/goldyfruit))
+- Tighten fr-FR Pokédex wording and names [\#5](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/5) ([goldyfruit](https://github.com/goldyfruit))
 
 
 

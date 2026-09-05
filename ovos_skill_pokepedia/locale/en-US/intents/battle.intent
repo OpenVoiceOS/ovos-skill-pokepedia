@@ -1,8 +1,4 @@
-who wins between {PokemonA} and {PokemonB}
-who would win {PokemonA} vs {PokemonB}
-who is stronger {PokemonA} or {PokemonB}
-{PokemonA} vs {PokemonB}
-{PokemonA} against {PokemonB}
-battle {PokemonA} and {PokemonB}
-fight between {PokemonA} and {PokemonB}
-compare {PokemonA} and {PokemonB}
+who (wins|would win) [between] {pokemon_a} (and|or|vs|versus|against) {pokemon_b}
+who is stronger {pokemon_a} (or|vs|versus|against) {pokemon_b}
+(battle|fight|compare) [between] {pokemon_a} (and|vs|versus|against) {pokemon_b}
+{pokemon_a} (vs|versus|against) {pokemon_b}

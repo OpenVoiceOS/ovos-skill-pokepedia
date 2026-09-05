@@ -1,0 +1,5 @@
+(parle-moi|dis-moi tout sur|que sais-tu sur) le (pokémon|pokemon) {pokemon}
+(décris|décris-moi|présente-moi) le (pokémon|pokemon) {pokemon}
+(donne-moi la fiche|fiche) (pokédex|pokedex) de {pokemon}
+(qui|qu'est-ce que|c'est quoi) le (pokémon|pokemon) {pokemon}
+pokémon {pokemon}
