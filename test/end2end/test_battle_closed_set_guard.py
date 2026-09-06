@@ -66,7 +66,7 @@ class TestBattleClosedSetGuard(IntentRoutingMixin, TestCase):
         cap.capture(message, timeout=15)
         for msg in cap.finish():
             meta = msg.data.get("meta", {}) if msg.msg_type in _SPOKE else {}
-            if meta.get("dialog") == "battle.result":
+            if meta.get("dialog") == "battle":
                 return meta.get("data", {})
         return None
 

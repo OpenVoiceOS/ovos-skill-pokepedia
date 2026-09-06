@@ -156,10 +156,10 @@ class PokemonSkill(OVOSSkill):
     def handle_get_pokemon_info(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
-            self.speak_dialog("error.no.pokemon")
+            self.speak_dialog("error_no_pokemon")
             return
         if self.client is None:
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
             return
 
         pokemon_name = self._resolve_pokemon_name(pokemon_name)
@@ -170,7 +170,7 @@ class PokemonSkill(OVOSSkill):
             types = [t["type"]["name"] for t in pokemon["types"]]
 
             self.speak_dialog(
-                "pokemon.info",
+                "pokemon",
                 {
                     "pokemon_name": self._localized_pokemon_name(pokemon["name"]),
                     "pokedex_number": pokemon["id"],
@@ -185,19 +185,19 @@ class PokemonSkill(OVOSSkill):
             )
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon info: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
 
     @intent_handler("GetPokemonMoves.intent")
     def handle_get_pokemon_moves(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
-            self.speak_dialog("error.no.pokemon")
+            self.speak_dialog("error_no_pokemon")
             return
         if self.client is None:
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
             return
 
         pokemon_name = self._resolve_pokemon_name(pokemon_name)
@@ -214,7 +214,7 @@ class PokemonSkill(OVOSSkill):
                 else (moves[0] if moves else "")
             )
             self.speak_dialog(
-                "pokemon.moves",
+                "moves",
                 {
                     "pokemon_name": self._localized_pokemon_name(pokemon["name"]),
                     "moves": moves_str,
@@ -222,19 +222,19 @@ class PokemonSkill(OVOSSkill):
             )
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon moves: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
 
     @intent_handler("GetPokemonType.intent")
     def handle_get_pokemon_type(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
-            self.speak_dialog("error.no.pokemon")
+            self.speak_dialog("error_no_pokemon")
             return
         if self.client is None:
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
             return
 
         pokemon_name = self._resolve_pokemon_name(pokemon_name)
@@ -254,10 +254,10 @@ class PokemonSkill(OVOSSkill):
             )
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
         except Exception as e:
             LOG.error(f"Failed to get Pokemon type: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
 
     @intent_handler("battle.intent")
     def handle_battle_comparison(self, message):
@@ -277,7 +277,7 @@ class PokemonSkill(OVOSSkill):
         pokemon_a, pokemon_b = names[0], names[1]
 
         if self.client is None:
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
             return
 
         pokemon_a = self._resolve_pokemon_name(pokemon_a)
@@ -303,7 +303,7 @@ class PokemonSkill(OVOSSkill):
                 winner = self._phrase("depends_on_moves")
 
             self.speak_dialog(
-                "battle.result",
+                "battle",
                 {
                     "pokemon_a": self._localized_pokemon_name(pkmn_a["name"]),
                     "pokemon_b": self._localized_pokemon_name(pkmn_b["name"]),
@@ -314,10 +314,10 @@ class PokemonSkill(OVOSSkill):
             )
         except PokemonPokeAPIError as e:
             LOG.error(f"Pokemon API error: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
         except Exception as e:
             LOG.error(f"Failed to compare battle: {e}")
-            self.speak_dialog("error.not.found")
+            self.speak_dialog("error_not_found")
 
     @staticmethod
     def _type_advantage_scores(types_a: list, types_b: list) -> tuple:
