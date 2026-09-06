@@ -1,7 +1,7 @@
 """Intent-routing coverage for en-US.
 
 One canonical utterance per intent family: the Padatious
-``GetPokemonInfo`` and ``GetPokemonType`` file intents, and the Padatious
+``get_pokemon_info`` and ``get_pokemon_type`` file intents, and the Padatious
 ``battle.intent``. Each asserts the intent routed and the skill spoke — a
 drift-immune subset, never an ordered message sequence.
 """
@@ -15,12 +15,12 @@ class TestEnIntentRouting(IntentRoutingMixin, TestCase):
 
     def test_info_routes_through_padatious(self):
         self._assert_intent(
-            "tell me about the pokemon pikachu", "GetPokemonInfo", padatious=True
+            "tell me about the pokemon pikachu", "get_pokemon_info", padatious=True
         )
 
     def test_type_routes_through_padatious(self):
         self._assert_intent(
-            "what type is the pokemon charizard", "GetPokemonType", padatious=True
+            "what type is the pokemon charizard", "get_pokemon_type", padatious=True
         )
 
     def test_battle_routes_through_padatious(self):

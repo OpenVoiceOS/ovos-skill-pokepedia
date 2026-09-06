@@ -2,7 +2,7 @@
 
 ``{pokemon}`` is a free slot (no ``pokemon.entity`` gates it before this
 fix; only ``pokemon_a``/``pokemon_b`` feed ``battle.intent``). Combined with
-unanchored ``GetPokemonInfo`` templates such as ``(describe|who is|what
+unanchored ``get_pokemon_info`` templates such as ``(describe|who is|what
 is) [the pokemon] {pokemon}``, general-knowledge questions with no mention
 of Pokémon at all matched at padatious-HIGH and then
 ``_resolve_pokemon_name``'s fuzzy matcher (threshold >= 0.6) picked an
@@ -10,7 +10,7 @@ arbitrary pokedex entry and spoke it -- installing the skill broke
 unrelated general queries assistant-wide.
 
 The fix requires the literal noun "pokemon" on every previously-unanchored
-``GetPokemonInfo`` template. These tests assert the four reported
+``get_pokemon_info`` template. These tests assert the four reported
 false-positive utterances no longer match any pokepedia intent, and that
 the legitimate anchored phrasings still do.
 """
@@ -55,17 +55,17 @@ class TestGeneralKnowledgeGuard(IntentRoutingMixin, TestCase):
 
     def test_anchored_tell_me_about_still_matches(self):
         self._assert_intent(
-            "tell me about the pokemon pikachu", "GetPokemonInfo",
+            "tell me about the pokemon pikachu", "get_pokemon_info",
             padatious=True,
         )
 
     def test_anchored_describe_still_matches(self):
         self._assert_intent(
-            "describe the pokemon charizard", "GetPokemonInfo",
+            "describe the pokemon charizard", "get_pokemon_info",
             padatious=True,
         )
 
     def test_bare_pokemon_slot_still_matches(self):
         self._assert_intent(
-            "pokemon bulbasaur", "GetPokemonInfo", padatious=True
+            "pokemon bulbasaur", "get_pokemon_info", padatious=True
         )
