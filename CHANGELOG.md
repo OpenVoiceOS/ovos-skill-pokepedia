@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.2.0a1) (2026-09-11)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.2a1...1.2.0a1)
+
+**Merged pull requests:**
+
+- feat: de-DE, ca-ES, gl-ES, eu-ES, kab, pt-BR, nl-NL, sv-SE locale parity [\#40](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/40) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.1.2a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.1.2a1) (2026-09-06)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.1a1...1.1.2a1)
