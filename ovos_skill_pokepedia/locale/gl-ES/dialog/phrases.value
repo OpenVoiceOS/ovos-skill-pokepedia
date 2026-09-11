@@ -1,0 +1,29 @@
+very_strong, ataque moi forte
+strong, ataque forte
+normal, ataque medio
+weak, ataque débil
+very_weak, ataque moi débil
+fire, Lume
+water, Auga
+grass, Planta
+electric, Eléctrico
+ice, Xeo
+fighting, Loita
+poison, Veleno
+ground, Terra
+flying, Voador
+psychic, Psíquico
+bug, Bicho
+rock, Roca
+ghost, Pantasma
+dragon, Dragón
+dark, Sinistro
+steel, Aceiro
+fairy, Fada
+normal_type, Normal
+no_specific_advantages, sen vantaxes de tipo específicas
+strong_against_grass, forte contra tipos Planta
+strong_against_fire, forte contra tipos Lume
+strong_against_water, forte contra tipos Auga
+strong_against_normal, forte contra tipos Normal
+depends_on_moves, depende dos movementos usados
