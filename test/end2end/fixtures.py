@@ -33,9 +33,42 @@ FIXTURES = {
     "charmander": CHARMANDER,
 }
 
+# Minimal PokeAPI-shaped evolution chains: pikachu is a mid-chain stage
+# (evolves from pichu, into raichu), charmander is chain-start (evolves
+# into charmeleon).
+EVOLUTION_CHAINS = {
+    "pikachu": {
+        "species": {"name": "pichu"},
+        "evolves_to": [
+            {
+                "species": {"name": "pikachu"},
+                "evolves_to": [
+                    {"species": {"name": "raichu"}, "evolves_to": []}
+                ],
+            }
+        ],
+    },
+    "charmander": {
+        "species": {"name": "charmander"},
+        "evolves_to": [
+            {
+                "species": {"name": "charmeleon"},
+                "evolves_to": [
+                    {"species": {"name": "charizard"}, "evolves_to": []}
+                ],
+            }
+        ],
+    },
+}
+
 
 def fake_get_pokemon(name: str) -> dict:
     key = (name or "").lower()
     if key in FIXTURES:
         return FIXTURES[key]
     return PIKACHU
+
+
+def fake_get_evolution_chain(name: str) -> dict:
+    key = (name or "").lower()
+    return EVOLUTION_CHAINS.get(key, EVOLUTION_CHAINS["pikachu"])
