@@ -16,6 +16,7 @@ session with ``blacklisted_intents=None``, which aborts the whole pipeline
 before any stage can match. Every session also forces ``blacklisted_intents=[]``
 as belt-and-braces against that crash.
 """
+from time import monotonic, sleep
 from unittest.mock import MagicMock
 
 from ovos_utils.log import LOG
@@ -71,11 +72,42 @@ class IntentRoutingMixin:
         # five, so each per-locale module stays fast and the whole matrix stays
         # well under the CI job timeout.
         cls.minicroft = get_minicroft([SKILL_ID], lang=cls.LANG)
+        cls._await_padatious_training()
         loader = cls.minicroft.plugin_skills[SKILL_ID]
         skill = loader.instance
         client = MagicMock()
         client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
         skill.api_client = client
+
+    @classmethod
+    def _await_padatious_training(cls, timeout: float = 120.0):
+        """Block until Padatious has compiled this locale's container.
+
+        Padatious trains on a background thread and answers nothing until
+        the container is compiled. ovoscope only waits for that when it
+        saw the registration messages go by, and it can miss them, in
+        which case it returns while training is still running and every
+        Padatious assertion fails as an unmatched utterance. Waiting on
+        the engine's own state instead of on a bus signal is immune to
+        that: `finished_training_event` is clear while a training pass
+        runs and `needs_compile` stays true until the container can match.
+        """
+        plugin = cls.minicroft.intents.pipeline_plugins.get(
+            "ovos-padatious-pipeline-plugin")
+        trained = getattr(plugin, "finished_training_event", None)
+        if trained is None:  # Padatious absent from this pipeline
+            return
+        deadline = monotonic() + timeout
+        while monotonic() < deadline:
+            container = plugin.containers.get(cls.LANG)
+            if trained.is_set() and container is not None and not container.needs_compile:
+                return
+            sleep(0.25)
+        raise RuntimeError(
+            f"Padatious did not finish training {cls.LANG} within {timeout}s; "
+            "every Padatious assertion below would fail as an unmatched "
+            "utterance, which would read as a routing defect"
+        )
 
     @classmethod
     def tearDownClass(cls):
