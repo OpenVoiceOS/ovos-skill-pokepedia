@@ -108,7 +108,7 @@ def test_moves_speaks_rendered_content(minicroft):
 
 @pytest.mark.timeout(30)
 def test_no_pokemon_named_speaks_real_prompt(minicroft):
-    """GetPokemonInfo.intent matching with no {pokemon} slot bound must
+    """get_pokemon_info.intent matching with no {pokemon} slot bound must
     speak the actual "tell me which pokemon" prompt, not "error no pokemon"."""
     loader = minicroft.plugin_skills[SKILL_ID]
     skill = loader.instance

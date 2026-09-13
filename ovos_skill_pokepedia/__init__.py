@@ -152,7 +152,7 @@ class PokemonSkill(OVOSSkill):
 
     # ------------------------------------------------------------------ intents
 
-    @intent_handler("GetPokemonInfo.intent")
+    @intent_handler("get_pokemon_info.intent")
     def handle_get_pokemon_info(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
@@ -190,7 +190,7 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon info: {e}")
             self.speak_dialog("error_not_found")
 
-    @intent_handler("GetPokemonMoves.intent")
+    @intent_handler("get_pokemon_moves.intent")
     def handle_get_pokemon_moves(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:
@@ -227,7 +227,7 @@ class PokemonSkill(OVOSSkill):
             LOG.error(f"Failed to get Pokemon moves: {e}")
             self.speak_dialog("error_not_found")
 
-    @intent_handler("GetPokemonType.intent")
+    @intent_handler("get_pokemon_type.intent")
     def handle_get_pokemon_type(self, message):
         pokemon_name = message.data.get("pokemon")
         if not pokemon_name:

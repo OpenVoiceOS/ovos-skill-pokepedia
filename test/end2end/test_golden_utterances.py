@@ -4,7 +4,7 @@ The master ovoscope corpus carries no rows for
 ``ovos-skill-pokepedia.openvoiceos``, so ``golden_utterances.jsonl`` is
 derived from this skill's own vocab (``tell_me``/``pokemon``/``moves``/
 ``type``) covering all three Padatious file intents
-(``GetPokemonInfo``, ``GetPokemonType``, ``GetPokemonMoves`` -- the last of
+(``get_pokemon_info``, ``get_pokemon_type``, ``get_pokemon_moves`` -- the last of
 which had no e2e coverage at all before this suite, existing
 ``test_intents_*.py`` files only covered info/type/battle).
 
@@ -151,7 +151,7 @@ def test_pokeapi_failure_is_graceful(minicroft):
     finally:
         skill.api_client = original_client
 
-    assert f"{SKILL_ID}:GetPokemonInfo" in types, (
+    assert f"{SKILL_ID}:get_pokemon_info" in types, (
         f"expected the intent to still route despite backend failure, got {types!r}"
     )
     assert set(types) & _SPOKE, (

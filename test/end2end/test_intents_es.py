@@ -2,8 +2,8 @@
 
 Utterances are drawn from the es-ES locale files (``tell_me.voc``,
 ``type.voc``, ``battle.intent``), not machine-translated from English. Same
-three intent families as en-US: the Padatious ``GetPokemonInfo`` and
-``GetPokemonType`` intents and the Padatious ``battle.intent``.
+three intent families as en-US: the Padatious ``get_pokemon_info`` and
+``get_pokemon_type`` intents and the Padatious ``battle.intent``.
 """
 from unittest import TestCase
 
@@ -15,12 +15,12 @@ class TestEsIntentRouting(IntentRoutingMixin, TestCase):
 
     def test_info_routes_through_padatious(self):
         self._assert_intent(
-            "describe el pokemon pikachu", "GetPokemonInfo", padatious=True
+            "describe el pokemon pikachu", "get_pokemon_info", padatious=True
         )
 
     def test_type_routes_through_padatious(self):
         self._assert_intent(
-            "tipo del pokemon charizard", "GetPokemonType", padatious=True
+            "tipo del pokemon charizard", "get_pokemon_type", padatious=True
         )
 
     def test_battle_routes_through_padatious(self):
