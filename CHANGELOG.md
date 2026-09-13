@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.2.1a1) (2026-09-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.2.0a1...1.2.1a1)
+
+**Merged pull requests:**
+
+- fix: rename CamelCase intents to snake\_case \(spec conformance\) [\#39](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/39) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [1.2.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.2.0a1) (2026-09-11)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.1.2a1...1.2.0a1)
