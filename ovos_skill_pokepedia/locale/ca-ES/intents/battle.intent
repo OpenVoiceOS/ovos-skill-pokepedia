@@ -1,0 +1,4 @@
+qui (guanya|guanyaria) [entre] {pokemon_a} (i|o|contra) {pokemon_b}
+qui és més fort {pokemon_a} (o|contra) {pokemon_b}
+(combat|compara) [entre] {pokemon_a} (i|contra) {pokemon_b}
+{pokemon_a} contra {pokemon_b}

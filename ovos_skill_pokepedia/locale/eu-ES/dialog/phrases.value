@@ -1,0 +1,29 @@
+very_strong, eraso oso indartsua
+strong, eraso indartsua
+normal, eraso arrunta
+weak, eraso ahula
+very_weak, eraso oso ahula
+fire, Sua
+water, Ura
+grass, Landarea
+electric, Elektrikoa
+ice, Izotza
+fighting, Borroka
+poison, Pozoia
+ground, Lurra
+flying, Hegalaria
+psychic, Psikikoa
+bug, Intsektua
+rock, Harria
+ghost, Mamua
+dragon, Herensugea
+dark, Iluna
+steel, Altzairua
+fairy, Ipotxa
+normal_type, Arrunta
+no_specific_advantages, ez du abantaila espezifikorik
+strong_against_grass, indartsua Landare motaren aurka
+strong_against_fire, indartsua Suaren aurka
+strong_against_water, indartsua Uraren aurka
+strong_against_normal, indartsua Arrunta motaren aurka
+depends_on_moves, erabilitako erasoen araberakoa da

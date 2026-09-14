@@ -19,3 +19,8 @@ jobs:
       # e2e suite is silently skipped.
       require_adapt: true
       require_padatious: true
+      # Run serially: Padatious' fann2 C extension crashes under
+      # pytest-xdist workers. Each per-locale module boots one
+      # single-language MiniCroft (~1-2 min), so the whole five-language
+      # matrix still finishes well under the job timeout.
+      pytest_workers: '0'

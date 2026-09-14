@@ -1,0 +1,4 @@
+vem (vinner|skulle vinna) [mellan] {pokemon_a} (och|eller|mot) {pokemon_b}
+vem är starkast {pokemon_a} (eller|mot) {pokemon_b}
+(strid|jämför) [mellan] {pokemon_a} (och|mot) {pokemon_b}
+{pokemon_a} mot {pokemon_b}
