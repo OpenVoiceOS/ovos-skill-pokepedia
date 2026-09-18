@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.3.0a1) (2026-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.2.2a1...1.3.0a1)
+
+**Merged pull requests:**
+
+- feat\(locale\): fill sv-SE gap against en-US [\#48](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/48) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.2.2a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.2.2a1) (2026-09-14)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.2.1a1...1.2.2a1)
