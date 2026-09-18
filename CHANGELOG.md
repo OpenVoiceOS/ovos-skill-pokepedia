@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.4.0a1) (2026-09-18)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.3.0a1...1.4.0a1)
+
+**Merged pull requests:**
+
+- feat\(locale\): fill pokemon\_a/pokemon\_b entities for ca-ES, de-DE, eu-ES, gl-ES, nl-NL and pt-BR against en-US [\#51](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/51) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.3.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.3.0a1) (2026-09-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.2.2a1...1.3.0a1)
