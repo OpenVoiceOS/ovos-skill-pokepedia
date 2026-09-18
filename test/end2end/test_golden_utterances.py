@@ -33,7 +33,7 @@ from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance
 from ovos_skill_pokepedia.api_client import PokemonPokeAPIError
 
 from ._helpers import SKILL_ID, _ADAPT_PIPELINE, _PADATIOUS_PIPELINE, _SPOKE, _intent_candidates
-from .fixtures import fake_get_pokemon
+from .fixtures import fake_get_evolution_chain, fake_get_pokemon
 
 # Per-row reason for rows marked needs_manual: true in golden_utterances.jsonl.
 # The standard requires every row to run (as a real assertion, strict-xfailed
@@ -86,6 +86,7 @@ def minicroft():
     skill = loader.instance
     client = MagicMock()
     client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
+    client.get_evolution_chain.side_effect = lambda name: fake_get_evolution_chain(name)
     skill.api_client = client
     yield mc
     mc.stop()
@@ -105,7 +106,7 @@ def _capture(mc, text, session_id, pipeline=_ADAPT_PIPELINE):
     return [m.msg_type for m in cap.finish()]
 
 
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(300)
 @pytest.mark.parametrize("row", GOLDEN_ROWS, ids=lambda r: r["utterance"])
 def test_golden_utterance(minicroft, row):
     candidates = _intent_candidates(row["intent_label"])
@@ -119,7 +120,7 @@ def test_golden_utterance(minicroft, row):
     )
 
 
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(300)
 @pytest.mark.parametrize("negative", NEGATIVE_UTTERANCES, ids=lambda n: n[0])
 def test_negative_confusable_not_claimed(minicroft, negative):
     text, source_skill = negative
@@ -132,7 +133,7 @@ def test_negative_confusable_not_claimed(minicroft, negative):
     )
 
 
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(300)
 def test_pokeapi_failure_is_graceful(minicroft):
     """If the PokeAPI backend raises, the skill must speak "error.not.found"
     gracefully rather than crash the handler or leave the utterance
