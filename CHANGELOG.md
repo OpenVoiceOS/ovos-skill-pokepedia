@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.5.0a1) (2026-09-19)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.4.0a1...1.5.0a1)
+
+**Merged pull requests:**
+
+- feat\(locale\): add pokemon\_a and pokemon\_b entities for kab against en-US [\#53](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/53) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.4.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.4.0a1) (2026-09-18)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.3.0a1...1.4.0a1)
