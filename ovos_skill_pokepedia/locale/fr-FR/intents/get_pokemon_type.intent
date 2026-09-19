@@ -1,0 +1,4 @@
+quel est le type du (pokémon|pokemon) {pokemon}
+quel[s] type[s] a le (pokémon|pokemon) {pokemon}
+de quel type est le (pokémon|pokemon) {pokemon}
+(donne-moi le type|type[s]) du (pokémon|pokemon) {pokemon}

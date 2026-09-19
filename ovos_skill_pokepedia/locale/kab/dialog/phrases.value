@@ -1,0 +1,29 @@
+very_strong, lhemla iǧehden aṭas
+strong, lhemla iǧehden
+normal, lhemla alugen
+weak, lhemla iḍɛifen
+very_weak, lhemla iḍɛifen aṭas
+fire, Times
+water, Aman
+grass, Adɣaɣ
+electric, Trisiti
+ice, Agris
+fighting, Amenɣi
+poison, Tissit
+ground, Akal
+flying, Afurar
+psychic, Aẓayan
+bug, Iɣersiwen
+rock, Azru
+ghost, Lexyal
+dragon, Ilef n tmes
+dark, Ubrik
+steel, Uzzal
+fairy, Tiryelt
+normal_type, Alugen
+no_specific_advantages, ulac tafidi tuslig
+strong_against_grass, iǧehed mgal wid n Adɣaɣ
+strong_against_fire, iǧehed mgal wid n Times
+strong_against_water, iǧehed mgal wid n Aman
+strong_against_normal, iǧehed mgal wid n Alugen
+depends_on_moves, ilaq deg tɣawsiwin yettwaseqdacen

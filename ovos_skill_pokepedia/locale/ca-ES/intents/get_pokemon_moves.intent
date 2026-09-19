@@ -1,0 +1,4 @@
+[quins] moviments té {pokemon}
+moviments de {pokemon}
+(moveset|atacs) (de|per a) {pokemon}
+quins (moviments|atacs) (té|coneix|sap) {pokemon}
