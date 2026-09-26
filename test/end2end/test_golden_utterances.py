@@ -17,7 +17,7 @@ Follows the existing ``test/end2end/_helpers.py`` infrastructure: the
 PokeAPI backend is mocked deterministically (``fixtures.fake_get_pokemon``)
 for every routing assertion, and one graceful-failure test drives the real
 ``PokemonPokeAPIError`` path to confirm the skill degrades to
-``error.not.found`` rather than crashing.
+``error_not_found`` rather than crashing.
 
 Run:
     uv run pytest test/end2end/test_golden_utterances.py -v
@@ -33,7 +33,7 @@ from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance
 from ovos_skill_pokepedia.api_client import PokemonPokeAPIError
 
 from ._helpers import SKILL_ID, _ADAPT_PIPELINE, _PADATIOUS_PIPELINE, _SPOKE, _intent_candidates
-from .fixtures import fake_get_pokemon
+from .fixtures import fake_get_evolution_chain, fake_get_pokemon
 
 # Per-row reason for rows marked needs_manual: true in golden_utterances.jsonl.
 # The standard requires every row to run (as a real assertion, strict-xfailed
@@ -86,6 +86,7 @@ def minicroft():
     skill = loader.instance
     client = MagicMock()
     client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
+    client.get_evolution_chain.side_effect = lambda name: fake_get_evolution_chain(name)
     skill.api_client = client
     yield mc
     mc.stop()
@@ -134,7 +135,7 @@ def test_negative_confusable_not_claimed(minicroft, negative):
 
 @pytest.mark.timeout(30)
 def test_pokeapi_failure_is_graceful(minicroft):
-    """If the PokeAPI backend raises, the skill must speak "error.not.found"
+    """If the PokeAPI backend raises, the skill must speak "error_not_found"
     gracefully rather than crash the handler or leave the utterance
     unhandled."""
     loader = minicroft.plugin_skills[SKILL_ID]

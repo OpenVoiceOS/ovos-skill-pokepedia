@@ -6,9 +6,13 @@ the skill via ovoscope's MiniCroft — these unit tests cover pure helpers
 constructor) where a live bus is unnecessary.
 """
 import csv
+import uuid
 from pathlib import Path
+from unittest import mock
 
 import pytest
+from ovos_bus_client.message import Message
+from ovos_bus_client.session import SessionManager
 
 
 LOCALE_DIR = Path(__file__).parents[1] / "ovos_skill_pokepedia" / "locale"
@@ -260,6 +264,377 @@ class TestSkillLocalizationHelpers:
 
         assert phrases["normal_type"] == expected
         assert phrases["normal_type"] != phrases["normal"]
+
+
+class TestFindNextEvolution:
+    CHAIN = {
+        "species": {"name": "charmander"},
+        "evolves_to": [
+            {
+                "species": {"name": "charmeleon"},
+                "evolves_to": [
+                    {"species": {"name": "charizard"}, "evolves_to": []}
+                ],
+            }
+        ],
+    }
+
+    def test_finds_middle_stage(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "charmander") == "charmeleon"
+
+    def test_finds_final_step_from_middle(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "charmeleon") == "charizard"
+
+    def test_final_stage_returns_none(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "charizard") is None
+
+    def test_name_not_in_chain_returns_none(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "pikachu") is None
+
+    def test_case_insensitive(self):
+        from ovos_skill_pokepedia.api_client import find_next_evolution
+        assert find_next_evolution(self.CHAIN, "CHARMANDER") == "charmeleon"
+
+
+class _FakeEvolutionClient:
+    def __init__(self, pokemon, chain):
+        self._pokemon = pokemon
+        self._chain = chain
+        self.asked = []
+
+    def get_pokemon(self, name):
+        self.asked.append(name)
+        return self._pokemon
+
+    def get_evolution_chain(self, name):
+        self.asked.append(name)
+        return self._chain
+
+
+class _StrictEvolutionClient(_FakeEvolutionClient):
+    """A client that answers only for the Pokemon it knows.
+
+    The permissive fake above returns its one payload whatever name it is
+    handed, so a handler that asks for "it" still gets Pikachu back and a
+    test on the spoken dialog cannot see the defect: removing the slot
+    exclusion left such a test green. The real API 404s, and so does this.
+    """
+
+    def __init__(self, known, pokemon, chain):
+        super().__init__(pokemon, chain)
+        self._known = known
+
+    def get_pokemon(self, name):
+        self.asked.append(name)
+        if name != self._known:
+            return None
+        return self._pokemon
+
+    def get_evolution_chain(self, name):
+        self.asked.append(name)
+        if name != self._known:
+            return None
+        return self._chain
+
+
+class TestEvolutionIntentAndContextFallback:
+    """Covers get_pokemon_evolution and the prev_pokemon context fallback on
+    get_pokemon_moves/get_pokemon_type/get_pokemon_evolution (issue #32), plus the
+    session isolation the context must respect: the remembered Pokémon lives
+    on the SESSION (OVOS-CONTEXT-1 ``intent_context``), never on the skill
+    instance, since one shared skill instance serves every device/session.
+
+    This harness has no real bus (see the module docstring: pure-helper
+    coverage lives here, real dispatch lives in ``test/end2end/``), so there
+    is no ``ovos.utterance.speak``/``mycroft.skill.handler.complete`` wire to
+    listen on. The next best thing to reading the orchestrator's private
+    ``SessionManager.sessions`` registry is capturing the exact ``Session``
+    object the handler itself asked for and mutated, via a spy on the same
+    public ``SessionManager.get(message)`` call the skill code makes — never
+    the registry it is backed by. That captured session's serialized form is
+    then explicitly re-declared as the next turn's message context, exactly
+    as a real client would re-declare a session id."""
+
+    @staticmethod
+    def _make_skill(client=None):
+        from ovos_skill_pokepedia import PokemonSkill
+
+        class Harness:
+            _load_name_aliases = PokemonSkill._load_name_aliases
+            _resolve_pokemon_name = PokemonSkill._resolve_pokemon_name
+            _localized_pokemon_name = PokemonSkill._localized_pokemon_name
+            _remember_pokemon = PokemonSkill._remember_pokemon
+            _pokemon_from_message = PokemonSkill._pokemon_from_message
+            _slot_blacklist = PokemonSkill._slot_blacklist
+            _format_types = PokemonSkill._format_types
+            _join_for_speech = PokemonSkill._join_for_speech
+            _phrase = PokemonSkill._phrase
+            _format_type_explanation = PokemonSkill._format_type_explanation
+            _get_type_advantages_for_pokemon = (
+                PokemonSkill._get_type_advantages_for_pokemon
+            )
+            handle_get_pokemon_evolution = PokemonSkill.handle_get_pokemon_evolution
+            handle_get_pokemon_moves = PokemonSkill.handle_get_pokemon_moves
+            handle_get_pokemon_type = PokemonSkill.handle_get_pokemon_type
+
+            def __init__(self):
+                self.api_client = client
+                self.spoken = []
+                self.resources = _FakeResources({})
+                self.lang = "en-US"
+
+            @property
+            def client(self):
+                return self.api_client
+
+            def voc_list(self, name):
+                return []
+
+            def find_resource(self, name, lang=None):
+                """The real shipped file, not a fake list.
+
+                The point of the pronoun tests is that the blacklist this
+                skill ACTUALLY ships excludes the pronouns, so a stub list
+                would assert nothing about the resource.
+                """
+                path = (Path(__file__).resolve().parents[1]
+                        / "ovos_skill_pokepedia" / "locale"
+                        / (lang or self.lang) / "vocab" / name)
+                return str(path) if path.is_file() else None
+
+            def speak_dialog(self, key, data=None):
+                self.spoken.append((key, data or {}))
+
+        return Harness()
+
+    @staticmethod
+    def _msg(session=None, data=None):
+        """Build a Message declaring ``session`` (a serialized session dict
+        captured from a previous turn), or a fresh client-chosen session id
+        when omitted - never one pulled from the orchestrator's registry."""
+        session = session or {"session_id": f"poke-{uuid.uuid4()}"}
+        return Message("intent", data or {}, {"session": session})
+
+    @staticmethod
+    def _call(handler, message):
+        """Call ``handler(message)`` and capture the ``Session`` object the
+        handler itself obtained via ``SessionManager.get(message)`` - the
+        same call the skill code makes internally - by spying on that public
+        entry point rather than reading the registry after the fact.
+
+        Returns the session's serialized form for re-declaring on the next
+        turn.
+        """
+        captured = {}
+        real_get = SessionManager.get
+
+        def _spy_get(msg=None):
+            session = real_get(msg)
+            captured["session"] = session
+            return session
+
+        with mock.patch("ovos_skill_pokepedia.SessionManager.get", side_effect=_spy_get):
+            handler(message)
+        return captured["session"].serialize() if captured.get("session") else None
+
+    def test_evolution_speaks_next_stage(self):
+        chain = {
+            "species": {"name": "charmander"},
+            "evolves_to": [
+                {"species": {"name": "charmeleon"}, "evolves_to": []}
+            ],
+        }
+        skill = self._make_skill(
+            _FakeEvolutionClient({"name": "charmander"}, chain)
+        )
+        session = self._call(
+            skill.handle_get_pokemon_evolution,
+            self._msg(data={"pokemon": "charmander"}),
+        )
+
+        assert skill.spoken == [
+            ("evolution", {"pokemon": "Charmander", "evolution": "Charmeleon"})
+        ]
+        entry = session["intent_context"].get("prev_pokemon")
+        assert entry == {"value": "charmander", "turns_remaining": 3}
+
+    def test_evolution_speaks_final_stage_dialog(self):
+        chain = {"species": {"name": "charizard"}, "evolves_to": []}
+        skill = self._make_skill(
+            _FakeEvolutionClient({"name": "charizard"}, chain)
+        )
+        skill.handle_get_pokemon_evolution(
+            self._msg(data={"pokemon": "charizard"})
+        )
+
+        assert skill.spoken == [("evolution_final", {"pokemon": "Charizard"})]
+
+    def test_evolution_without_pokemon_or_context_speaks_error(self):
+        skill = self._make_skill(_FakeEvolutionClient({}, {}))
+        skill.handle_get_pokemon_evolution(self._msg())
+
+        assert skill.spoken == [("error_no_pokemon", {})]
+
+    def test_moves_falls_back_to_prev_pokemon_context(self):
+        pokemon = {
+            "name": "pikachu",
+            "moves": [{"move": {"name": "thunderbolt"}}],
+        }
+        skill = self._make_skill(_FakeEvolutionClient(pokemon, {}))
+        session = self._call(
+            lambda m: skill._remember_pokemon("pikachu", m), self._msg())
+
+        skill.handle_get_pokemon_moves(self._msg(session=session))
+
+        assert skill.spoken == [
+            ("moves", {"pokemon_name": "Pikachu", "moves": "Thunderbolt"})
+        ]
+
+    def test_moves_without_pokemon_or_context_speaks_error(self):
+        skill = self._make_skill(_FakeEvolutionClient({}, {}))
+
+        skill.handle_get_pokemon_moves(self._msg())
+
+        assert skill.spoken == [("error_no_pokemon", {})]
+
+    def test_explicit_pokemon_slot_wins_over_stale_context(self):
+        pokemon = {
+            "name": "bulbasaur",
+            "moves": [{"move": {"name": "vine-whip"}}],
+        }
+        skill = self._make_skill(_FakeEvolutionClient(pokemon, {}))
+        session = self._call(
+            lambda m: skill._remember_pokemon("charmander", m), self._msg())
+
+        session = self._call(
+            skill.handle_get_pokemon_moves,
+            self._msg(session=session, data={"pokemon": "bulbasaur"}),
+        )
+
+        assert skill.spoken == [
+            ("moves", {"pokemon_name": "Bulbasaur", "moves": "Vine Whip"})
+        ]
+        assert session["intent_context"].get("prev_pokemon") == {
+            "value": "bulbasaur", "turns_remaining": 3,
+        }
+
+    def test_a_pronoun_slot_does_not_defeat_the_context_fallback(self):
+        """harness-d LIVE FAIL on #33 @c663d61d.
+
+        Every pronoun phrasing this skill ships has a slotted sibling that
+        can swallow it. On a real bus, "what does it evolve into" matched
+        "what does {pokemon} evolve into" and the intent message carried
+        pokemon="it", so the slot was never empty, prev_pokemon was never
+        read, and the skill asked the API for a Pokemon called "it":
+
+            404 Client Error: Not Found for url:
+            https://pokeapi.co/api/v2/pokemon/it
+
+        Three of the seven phrasings failed that way and four passed, the
+        four whose wording no slotted template matches. The three are driven
+        here by their captured slot value rather than by their utterance,
+        because the capture is the defect.
+        """
+        pokemon = {
+            "name": "pikachu",
+            "moves": [{"move": {"name": "thunderbolt"}}],
+        }
+        for pronoun in ("it", "its", "It", " it "):
+            client = _StrictEvolutionClient("pikachu", pokemon, {})
+            skill = self._make_skill(client)
+            session = self._call(
+                lambda m: skill._remember_pokemon("pikachu", m), self._msg())
+
+            skill.handle_get_pokemon_moves(
+                self._msg(session=session, data={"pokemon": pronoun}))
+
+            # the assertion that discriminates: the API must never be asked
+            # for the pronoun, which is the 404 the live stage recorded
+            assert client.asked == ["pikachu"], (
+                f"{pronoun!r} reached the API as {client.asked!r}")
+            assert skill.spoken == [
+                ("moves", {"pokemon_name": "Pikachu", "moves": "Thunderbolt"})
+            ], f"{pronoun!r} did not fall back to the remembered Pokemon"
+
+    def test_an_indented_comment_is_a_comment_not_a_pokemon(self, tmp_path):
+        """reviewer-skills on #33: strip before testing for the comment.
+
+        The first version tested the RAW line for "#" and stripped
+        afterwards, so a comment indented by any whitespace was not
+        recognised and became a blacklist value. The shipped file has its
+        comments at column zero, so nothing was wrong today and everything
+        was wrong the moment somebody indented one. naptime#133 fixes the
+        same defect in its own reader.
+        """
+        from ovos_skill_pokepedia import PokemonSkill
+
+        blacklist = tmp_path / "pokemon.blacklist"
+        blacklist.write_text(
+            "# flush comment\n"
+            "    # indented comment\n"
+            "\t# tabbed comment\n"
+            "  it  \n"
+            "\n",
+            encoding="utf-8")
+
+        class Harness:
+            _slot_blacklist = PokemonSkill._slot_blacklist
+            lang = "en-US"
+
+            def find_resource(self, name, lang=None):
+                return str(blacklist)
+
+        excluded = Harness()._slot_blacklist("en-US")
+
+        assert excluded == {"it"}, (
+            f"an indented comment leaked into the exclusion set: {excluded!r}")
+
+    def test_a_real_name_still_wins_over_the_context(self):
+        """The exclusion must not swallow a real Pokemon.
+
+        The control for the test above: the same path with a name rather
+        than a pronoun must still use the name.
+        """
+        pokemon = {
+            "name": "bulbasaur",
+            "moves": [{"move": {"name": "vine-whip"}}],
+        }
+        client = _StrictEvolutionClient("bulbasaur", pokemon, {})
+        skill = self._make_skill(client)
+        session = self._call(
+            lambda m: skill._remember_pokemon("charmander", m), self._msg())
+
+        skill.handle_get_pokemon_moves(
+            self._msg(session=session, data={"pokemon": "bulbasaur"}))
+
+        assert client.asked == ["bulbasaur"], (
+            f"the name lost to the remembered Pokemon: {client.asked!r}")
+        assert skill.spoken == [
+            ("moves", {"pokemon_name": "Bulbasaur", "moves": "Vine Whip"})
+        ]
+
+    def test_prev_pokemon_context_is_session_isolated(self):
+        """Reviewer repro (issue #32 follow-up): two DIFFERENT sessions must
+        never share a remembered Pokémon. Session A looks up Charmander;
+        session B's "what about its moves" (no {pokemon} slot) must NOT
+        resolve to Charmander, since B never looked anything up."""
+        chain = {"species": {"name": "charmander"}, "evolves_to": []}
+        skill = self._make_skill(_FakeEvolutionClient({"name": "charmander"}, chain))
+
+        skill.handle_get_pokemon_evolution(self._msg(data={"pokemon": "charmander"}))
+        assert skill.spoken[-1] == ("evolution_final", {"pokemon": "Charmander"})
+
+        skill.spoken.clear()
+        skill.handle_get_pokemon_moves(self._msg())
+
+        assert skill.spoken == [("error_no_pokemon", {})], (
+            "device B resolved device A's remembered Pokémon "
+            f"instead of erroring: {skill.spoken}"
+        )
 
 
 if __name__ == "__main__":
