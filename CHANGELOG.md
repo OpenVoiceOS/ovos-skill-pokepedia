@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.5.0a3) (2026-09-26)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.5.0a2...1.5.0a3)
+
+**Merged pull requests:**
+
+- locale: carry andlo's vouched da-DK into the parity cut [\#55](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/55) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.5.0a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.5.0a2) (2026-09-26)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.5.0a1...1.5.0a2)
