@@ -16,8 +16,11 @@ session with ``blacklisted_intents=None``, which aborts the whole pipeline
 before any stage can match. Every session also forces ``blacklisted_intents=[]``
 as belt-and-braces against that crash.
 """
+import json
+from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
 from ovos_utils.log import LOG
 from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance_message
 
@@ -40,6 +43,38 @@ _PADATIOUS_PIPELINE = [
 # legacy ``speak`` and/or the renamed ``ovos.utterance.speak`` depending on
 # version. Matching either keeps the assertion immune to that rename.
 _SPOKE = {"speak", "ovos.utterance.speak"}
+
+GOLDEN_PATH = Path(__file__).parent / "golden_utterances.jsonl"
+
+
+def load_golden_rows(lang: str) -> list:
+    """Return the golden rows of one language.
+
+    A row without a ``lang`` key belongs to en-US, the reference locale.
+    """
+    rows = []
+    with open(GOLDEN_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            row = json.loads(line)
+            if row.get("lang", "en-US") == lang:
+                rows.append(row)
+    return rows
+
+
+def golden_params(rows: list, needs_manual_reasons: dict) -> list:
+    params = []
+    for row in rows:
+        if row.get("needs_manual"):
+            reason = needs_manual_reasons.get(row["utterance"])
+            assert reason, f"missing needs_manual reason for {row['utterance']!r}"
+            params.append(pytest.param(row, id=row["utterance"],
+                                       marks=pytest.mark.xfail(strict=True, reason=reason)))
+        else:
+            params.append(pytest.param(row, id=row["utterance"]))
+    return params
 
 
 def _intent_candidates(intent_name: str) -> set:

@@ -22,8 +22,6 @@ for every routing assertion, and one graceful-failure test drives the real
 Run:
     uv run pytest test/end2end/test_golden_utterances.py -v
 """
-import json
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -32,7 +30,10 @@ from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance
 
 from ovos_skill_pokepedia.api_client import PokemonPokeAPIError
 
-from ._helpers import SKILL_ID, _ADAPT_PIPELINE, _PADATIOUS_PIPELINE, _SPOKE, _intent_candidates
+from ._helpers import (
+    SKILL_ID, _ADAPT_PIPELINE, _PADATIOUS_PIPELINE, _SPOKE, _intent_candidates,
+    golden_params, load_golden_rows,
+)
 from .fixtures import fake_get_pokemon
 
 # Per-row reason for rows marked needs_manual: true in golden_utterances.jsonl.
@@ -41,7 +42,6 @@ from .fixtures import fake_get_pokemon
 _NEEDS_MANUAL_REASONS = {}
 
 LANG = "en-US"
-GOLDEN_PATH = Path(__file__).parent / "golden_utterances.jsonl"
 
 # Confusables from other skills' domains, picked for lexical overlap with
 # "tell me about"/"type of"/"moves" phrasing.
@@ -56,26 +56,7 @@ NEGATIVE_UTTERANCES = [
 ]
 
 
-def _load_golden_rows():
-    rows = []
-    with open(GOLDEN_PATH, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            rows.append(json.loads(line))
-    return rows
-
-
-def _as_param(row):
-    if row.get("needs_manual"):
-        reason = _NEEDS_MANUAL_REASONS.get(row["utterance"])
-        assert reason, f"missing _NEEDS_MANUAL_REASONS entry for {row['utterance']!r}"
-        return pytest.param(row, id=row["utterance"], marks=pytest.mark.xfail(strict=True, reason=reason))
-    return pytest.param(row, id=row["utterance"])
-
-
-GOLDEN_ROWS = [_as_param(r) for r in _load_golden_rows()]
+GOLDEN_ROWS = golden_params(load_golden_rows(LANG), _NEEDS_MANUAL_REASONS)
 
 
 @pytest.fixture(scope="module")
