@@ -1,0 +1,29 @@
+very_strong, mycket starkt anfall
+strong, starkt anfall
+normal, genomsnittligt anfall
+weak, svagt anfall
+very_weak, mycket svagt anfall
+fire, Eld
+water, Vatten
+grass, Växt
+electric, Elektrisk
+ice, Is
+fighting, Kamp
+poison, Gift
+ground, Mark
+flying, Flygande
+psychic, Psykisk
+bug, Insekt
+rock, Sten
+ghost, Spöke
+dragon, Drake
+dark, Mörk
+steel, Stål
+fairy, Fe
+normal_type, Normal
+no_specific_advantages, inga specifika typfördelar
+strong_against_grass, stark mot Växt-typer
+strong_against_fire, stark mot Eld-typer
+strong_against_water, stark mot Vatten-typer
+strong_against_normal, stark mot Normal-typer
+depends_on_moves, det beror på vilka attacker som används

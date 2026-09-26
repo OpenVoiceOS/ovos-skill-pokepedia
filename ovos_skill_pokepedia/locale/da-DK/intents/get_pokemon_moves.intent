@@ -1,0 +1,6 @@
+[hvilke] angreb (har|kan) {pokemon}
+(angrebssæt|angreb) for {pokemon}
+hvilke angreb kan {pokemon} (kende|lære|have)
+# The line below is not andlo's and is not vouched: it is new phrasing
+# from the machine cut, kept for recognition coverage. Pending andlo.
+angrebsliste for {pokemon}
