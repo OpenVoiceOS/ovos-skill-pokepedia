@@ -73,7 +73,7 @@ class PokemonSkill(OVOSSkill):
     def _load_name_aliases(self) -> dict:
         """Load localized Pokémon-name aliases mapped to PokeAPI slugs."""
         try:
-            mapping = self.resources.load_named_value_file("pokemon.name.aliases")
+            mapping = self.resources.load_named_value_file("pokemon_name_aliases")
         except Exception:
             mapping = {}
         return {alias.casefold(): canonical for alias, canonical in mapping.items()}
@@ -81,7 +81,7 @@ class PokemonSkill(OVOSSkill):
     def _localized_pokemon_name(self, canonical_name: str) -> str:
         """Return the active locale's display name for a PokeAPI slug."""
         try:
-            mapping = self.resources.load_named_value_file("pokemon.name.display")
+            mapping = self.resources.load_named_value_file("pokemon_name_display")
         except Exception:
             mapping = {}
         return mapping.get(canonical_name, canonical_name.replace("-", " ").title())

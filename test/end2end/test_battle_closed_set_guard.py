@@ -14,7 +14,7 @@ real pokemon only under their API-canonical hyphenated/special-form slug
 ("nidoran-f"/"nidoran-m", "mr-mime", "ho-oh", ...), so the closed-set gate
 initially rejected the natural spoken spelling of those names ("nidoran",
 "mr mime", "ho oh") even though the pre-fix fuzzy resolver used to handle
-them fine. ``pokemon.voc``/``pokemon.name.aliases.value`` now also carry
+them fine. ``pokemon.voc``/``pokemon_name_aliases.value`` now also carry
 the de-hyphenated natural-language spelling of every such entry, mapped
 back to a valid pokedex slug.
 

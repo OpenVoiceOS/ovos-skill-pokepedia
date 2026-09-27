@@ -174,7 +174,7 @@ class TestSkillLocalizationHelpers:
 
     def test_resolve_french_name_to_api_slug(self):
         skill = self._make_skill(
-            {"pokemon.name.aliases": {"salamèche": "charmander"}},
+            {"pokemon_name_aliases": {"salamèche": "charmander"}},
             ["charmander", "salamèche"],
         )
 
@@ -187,7 +187,7 @@ class TestSkillLocalizationHelpers:
 
     def test_localized_display_name(self):
         skill = self._make_skill(
-            {"pokemon.name.display": {"charmander": "Salamèche"}}
+            {"pokemon_name_display": {"charmander": "Salamèche"}}
         )
 
         assert skill._localized_pokemon_name("charmander") == "Salamèche"
