@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.7.0a3) (2026-09-28)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.7.0a2...1.7.0a3)
+
+**Merged pull requests:**
+
+- locale: ru-RU phrases.value resolves no key, so the skill speaks its own labels [\#64](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/64) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.7.0a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.7.0a2) (2026-09-28)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.7.0a1...1.7.0a2)
