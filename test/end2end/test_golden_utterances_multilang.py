@@ -1,11 +1,12 @@
 """Multilingual golden-utterance end-to-end coverage for
 ovos-skill-pokepedia.
 
-test_golden_utterances.py and the per-locale test_intents_*.py files only
-exercised en-US/es/fr/it/pt. test_golden_utterances.py still runs: it loads
-the eight lang-less rows of golden_utterances.jsonl, which are a subset of
-the twenty rows here. test_golden_utterances_da.py reads the da-DK rows of
-that same file, so da-DK has its own module and no corpus under LANGS.
+The per-locale test_intents_*.py files only exercised en-US/es/fr/it/pt.
+This file replaces the en-US module that read the eight lang-less rows of
+golden_utterances.jsonl: those eight are a subset of the twenty rows here,
+so no coverage went with it. test_golden_utterances_da.py still reads the
+da-DK rows of that same corpus, so da-DK has its own module and no entry
+under LANGS.
 
 This skill registers four Padatious/Padacioso file-intents (get_pokemon_info,
 get_pokemon_moves, get_pokemon_type, battle); every locale under locale/
