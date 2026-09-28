@@ -1,0 +1,15 @@
+چه کسی برنده می شود {pokemon_a} و {pokemon_b}
+چه کسی برنده می شود {pokemon_a} یا {pokemon_b}
+چه کسی برنده می شود {pokemon_a} vs {pokemon_b}
+چه کسی برنده می شود {pokemon_a} در مقابل {pokemon_b}
+چه کسی قوی تر است {pokemon_a} یا {pokemon_b}
+چه کسی قوی تر است {pokemon_a} vs {pokemon_b}
+چه کسی قوی تر است {pokemon_a} در مقابل {pokemon_b}
+چه کسی قوی تر است {pokemon_a} علیه {pokemon_b}
+نبرد {pokemon_a} و {pokemon_b}
+مبارزه {pokemon_a} و {pokemon_b}
+مقایسه {pokemon_a} و {pokemon_b}
+نبرد {pokemon_a} vs {pokemon_b}
+{pokemon_a} vs {pokemon_b}
+{pokemon_a} در مقابل {pokemon_b}
+{pokemon_a} علیه {pokemon_b}
