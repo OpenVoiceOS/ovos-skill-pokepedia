@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.7.0a1) (2026-09-28)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.6.0a1...1.7.0a1)
+
+**Merged pull requests:**
+
+- feat\(locale\): draft fa-IR, pl-PL and ru-RU from en-US \(machine translation, unvouched\) [\#60](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/60) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.6.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.6.0a1) (2026-09-28)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.5.0a3...1.6.0a1)
