@@ -69,8 +69,16 @@ def _candidates(skill_id: str, intent_label: str) -> set:
 
 
 def _load_rows(lang):
+    """The rows this locale contributes, and how many it held back.
+
+    A `needs_manual` row is a row a native speaker has still to vouch
+    for. It is not a cell, and a locale may hold back every row it has.
+    The count is returned so the import-time guard can tell that locale
+    apart from a corpus file that is empty or unreadable.
+    """
     path = END2END_DIR / f"golden_utterances_{lang}.jsonl"
     rows = []
+    needs_manual = 0
     with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -78,15 +86,21 @@ def _load_rows(lang):
                 continue
             row = json.loads(line)
             if row.get("needs_manual"):
+                needs_manual += 1
                 continue
             rows.append(row)
-    return rows
+    return rows, needs_manual
 
 
 ALL_ROWS = []
 for _lang in LANGS:
-    _rows = _load_rows(_lang)
-    assert _rows, f"no golden rows loaded for {_lang}"
+    _rows, _needs_manual = _load_rows(_lang)
+    # A locale whose rows are all `needs_manual` contributes zero cells and
+    # is not an error: that is how a corpus waits for its native reviewer.
+    # An empty or all-blank file has neither rows nor held-back rows, and
+    # still fails here, at import, where a silent gap would otherwise read
+    # as coverage.
+    assert _rows or _needs_manual, f"no golden rows loaded for {_lang}"
     for _row in _rows:
         ALL_ROWS.append(_row)
 
