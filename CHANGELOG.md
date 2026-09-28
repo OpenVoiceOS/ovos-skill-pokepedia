@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.7.0a2) (2026-09-28)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.7.0a1...1.7.0a2)
+
+**Merged pull requests:**
+
+- locale: drop the runaway lines and repair the phrase files fa-IR and pl-PL [\#62](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/62) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.7.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.7.0a1) (2026-09-28)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.6.0a1...1.7.0a1)
