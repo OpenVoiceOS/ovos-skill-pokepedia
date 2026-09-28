@@ -1,9 +1,13 @@
 """Multilingual golden-utterance end-to-end coverage for
 ovos-skill-pokepedia.
 
-test_golden_utterances.py (superseded by this file) and the per-locale
-test_intents_*.py files only exercised en-US/es/fr/it/pt. This skill
-registers four Padatious/Padacioso file-intents (get_pokemon_info,
+test_golden_utterances.py and the per-locale test_intents_*.py files only
+exercised en-US/es/fr/it/pt. test_golden_utterances.py still runs: it loads
+the eight lang-less rows of golden_utterances.jsonl, which are a subset of
+the twenty rows here. test_golden_utterances_da.py reads the da-DK rows of
+that same file, so da-DK has its own module and no corpus under LANGS.
+
+This skill registers four Padatious/Padacioso file-intents (get_pokemon_info,
 get_pokemon_moves, get_pokemon_type, battle); every locale under locale/
 ships real .intent and .voc content for all four. Each golden row is a
 literal resolution of that locale's own .intent template lines --
@@ -80,7 +84,9 @@ def _load_rows(lang):
 
 ALL_ROWS = []
 for _lang in LANGS:
-    for _row in _load_rows(_lang):
+    _rows = _load_rows(_lang)
+    assert _rows, f"no golden rows loaded for {_lang}"
+    for _row in _rows:
         ALL_ROWS.append(_row)
 
 
@@ -149,3 +155,24 @@ def test_cross_language_negative(negative):
     types = _types(mc, text, lang, f"negative-{lang}-{text}")
     claimed = any(t.startswith(f"{SKILL_ID}:") for t in types)
     assert not claimed, f"[{lang}] {text!r} was incorrectly claimed by {SKILL_ID}"
+
+
+def _corpus_langs():
+    """Every locale that ships a per-locale corpus beside this module."""
+    return {p.name[len("golden_utterances_"):-len(".jsonl")]
+            for p in END2END_DIR.glob("golden_utterances_*.jsonl")}
+
+
+def test_langs_matches_the_corpus_files():
+    """LANGS is a literal, so a corpus added without an entry runs nowhere.
+
+    A corpus file with no LANGS entry is dropped in silence, and a LANGS
+    entry with no corpus file raises at import. This pins the two together.
+    """
+    on_disk = _corpus_langs()
+    assert on_disk, "no golden_utterances_<lang>.jsonl found beside this module"
+    assert set(LANGS) == on_disk, (
+        f"LANGS and the corpus files disagree: "
+        f"only in LANGS {sorted(set(LANGS) - on_disk)!r}, "
+        f"only on disk {sorted(on_disk - set(LANGS))!r}"
+    )
