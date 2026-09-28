@@ -1,29 +1,29 @@
-bardzo_silny, bardzo silny atak
-silny, silny atak
-normalny, średni atak
-słaby, słaby atak
-bardzo_ słaby, bardzo słaby atak
-Ogień, ogień
-Woda, woda
-trawka, trawka
-elektryczne, elektryczne
-lód, lód
-walki, walki
-trucizna, trucizna
-ziemia, ziemia
-latania, latania
-medium, psychologia
-/Bąg, /Bąg
-rock, Rock, Rock
-duch, Ghost
-Smok, Smok
-ciemne, ciemne
-stali, stali, stali
-wróżka, wróżka, wróżka
-normalny_ typ, zwyczajny
-brak_specyfikatów, brak specyficznych zalet typu
-silne i silne przeciw typom trawki
-potężny_pożar, silny przeciwko typom ognia
-silna_odawcza_od, silna od typów wody
-silne_ przeciwnormalne, silne dla typów zwyczajnych
-passey_on_ruchy, to zależy od używanych ruchów
+very_strong,bardzo silny atak
+strong,silny atak
+normal,średni atak
+weak,słaby atak
+very_weak,bardzo słaby atak
+fire,ogień
+water,woda
+grass,trawka
+electric,elektryczne
+ice,lód
+fighting,walki
+poison,trucizna
+ground,ziemia
+flying,latania
+psychic,psychologia
+bug,Robak
+rock,Skała
+ghost,Duch
+dragon,Smok
+dark,ciemne
+steel,Stal
+fairy,wróżka
+normal_type,zwyczajny
+no_specific_advantages,brak specyficznych zalet typu
+strong_against_grass,silne przeciw typom trawki
+strong_against_fire,silny przeciwko typom ognia
+strong_against_water,silna od typów wody
+strong_against_normal,silne dla typów zwyczajnych
+depends_on_moves,to zależy od używanych ruchów
