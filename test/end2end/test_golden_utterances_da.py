@@ -1,7 +1,7 @@
 """Golden-utterance end-to-end coverage for da-DK.
 
-The rows come from ``golden_utterances.jsonl``, filtered to the ``da-DK``
-language, and cover the four Padatious file intents of the skill.
+The rows come from ``golden_utterances_da-DK.jsonl`` and cover the four
+Padatious file intents of the skill.
 
 Every row whose ``machine_generated`` is false drives a phrasing andlo
 wrote and confirmed as a native speaker (#41, carried here from 591acf0).
@@ -24,10 +24,8 @@ from ._helpers import (
 )
 from .fixtures import fake_get_pokemon
 
-_NEEDS_MANUAL_REASONS = {}
-
 LANG = "da-DK"
-GOLDEN_ROWS = golden_params(load_golden_rows(LANG), _NEEDS_MANUAL_REASONS)
+GOLDEN_ROWS = golden_params(load_golden_rows(LANG))
 
 
 @pytest.fixture(scope="module")
