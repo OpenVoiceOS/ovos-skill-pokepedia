@@ -1,7 +1,7 @@
 """Golden-utterance end-to-end coverage for ovos-skill-pokepedia (en-US).
 
 The master ovoscope corpus carries no rows for
-``ovos-skill-pokepedia.openvoiceos``, so ``golden_utterances.jsonl`` is
+``ovos-skill-pokepedia.openvoiceos``, so ``golden_utterances_en-US.jsonl`` is
 derived from this skill's own vocab (``tell_me``/``pokemon``/``moves``/
 ``type``) covering all three Padatious file intents
 (``get_pokemon_info``, ``get_pokemon_type``, ``get_pokemon_moves`` -- the last of
@@ -36,11 +36,6 @@ from ._helpers import (
 )
 from .fixtures import fake_get_pokemon
 
-# Per-row reason for rows marked needs_manual: true in golden_utterances.jsonl.
-# The standard requires every row to run (as a real assertion, strict-xfailed
-# with a reason if it's a known gap) rather than being silently skipped.
-_NEEDS_MANUAL_REASONS = {}
-
 LANG = "en-US"
 
 # Confusables from other skills' domains, picked for lexical overlap with
@@ -56,7 +51,7 @@ NEGATIVE_UTTERANCES = [
 ]
 
 
-GOLDEN_ROWS = golden_params(load_golden_rows(LANG), _NEEDS_MANUAL_REASONS)
+GOLDEN_ROWS = golden_params(load_golden_rows(LANG))
 
 
 @pytest.fixture(scope="module")
