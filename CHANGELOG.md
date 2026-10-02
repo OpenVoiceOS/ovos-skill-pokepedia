@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.1a1) (2026-10-02)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.0a1...1.8.1a1)
+
+**Merged pull requests:**
+
+- fix\(locale\): strip the dead Persian question mark from fa-IR pokepedia lines [\#69](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/69) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.8.0a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.0a1) (2026-09-28)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.7.0a3...1.8.0a1)
