@@ -1,0 +1,29 @@
+very_strong, sehr starker Angriff
+strong, starker Angriff
+normal, durchschnittlicher Angriff
+weak, schwacher Angriff
+very_weak, sehr schwacher Angriff
+fire, Feuer
+water, Wasser
+grass, Pflanze
+electric, Elektro
+ice, Eis
+fighting, Kampf
+poison, Gift
+ground, Boden
+flying, Flug
+psychic, Psycho
+bug, Käfer
+rock, Gestein
+ghost, Geist
+dragon, Drache
+dark, Unlicht
+steel, Stahl
+fairy, Fee
+normal_type, Normal
+no_specific_advantages, keine besonderen Typvorteile
+strong_against_grass, stark gegen Pflanze-Typen
+strong_against_fire, stark gegen Feuer-Typen
+strong_against_water, stark gegen Wasser-Typen
+strong_against_normal, stark gegen Normal-Typen
+depends_on_moves, es hängt von den benutzten Attacken ab

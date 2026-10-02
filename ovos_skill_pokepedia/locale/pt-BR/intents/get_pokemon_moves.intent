@@ -1,0 +1,4 @@
+[quais] golpes tem {pokemon}
+golpes de {pokemon}
+(moveset|ataques) (de|para) {pokemon}
+quais (golpes|ataques) {pokemon} (conhece|sabe|tem)

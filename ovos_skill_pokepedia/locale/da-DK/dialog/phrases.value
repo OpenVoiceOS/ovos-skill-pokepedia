@@ -1,0 +1,29 @@
+very_strong, meget stærkt angreb
+strong, stærkt angreb
+normal, middelstærkt angreb
+weak, svagt angreb
+very_weak, meget svagt angreb
+fire, Ild
+water, Vand
+grass, Plante
+electric, Elektrisk
+ice, Is
+fighting, Kamp
+poison, Gift
+ground, Jord
+flying, Flyvende
+psychic, Psykisk
+bug, Insekt
+rock, Sten
+ghost, Spøgelse
+dragon, Drage
+dark, Mørk
+steel, Stål
+fairy, Fe
+normal_type, Normal
+no_specific_advantages, ingen specifikke type-fordele
+strong_against_grass, stærk mod Plante-typer
+strong_against_fire, stærk mod Ild-typer
+strong_against_water, stærk mod Vand-typer
+strong_against_normal, stærk mod Normal-typer
+depends_on_moves, det afhænger af de anvendte angreb

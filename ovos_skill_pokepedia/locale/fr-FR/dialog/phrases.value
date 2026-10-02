@@ -1,8 +1,9 @@
-very_strong, attaque très forte
-strong, attaque forte
-normal, attaque moyenne
-weak, attaque faible
-very_weak, attaque très faible
+very_strong, très élevée
+strong, élevée
+normal, correcte
+weak, faible
+very_weak, très faible
+list_conjunction, et
 fire, Feu
 water, Eau
 grass, Plante
@@ -20,9 +21,27 @@ dragon, Dragon
 dark, Ténèbres
 steel, Acier
 fairy, Fée
-no_specific_advantages, pas d'avantages de type spécifiques
-strong_against_grass, fort contre les types Plante
-strong_against_fire, fort contre les types Feu
-strong_against_water, fort contre les types Eau
-strong_against_normal, fort contre les types Normal
-depends_on_moves, cela dépend des attaques utilisées
+normal_type, Normal
+fire_type, Feu
+water_type, Eau
+grass_type, Plante
+electric_type, Électrik
+ice_type, Glace
+fighting_type, Combat
+poison_type, Poison
+ground_type, Sol
+flying_type, Vol
+psychic_type, Psy
+bug_type, Insecte
+rock_type, Roche
+ghost_type, Spectre
+dragon_type, Dragon
+dark_type, Ténèbres
+steel_type, Acier
+fairy_type, Fée
+no_specific_advantages, Je ne vois pas d'avantage de type évident
+strong_against_grass, Il est efficace contre les Pokémon de type Plante
+strong_against_fire, Il est efficace contre les Pokémon de type Feu
+strong_against_water, Il est efficace contre les Pokémon de type Eau
+strong_against_normal, Il est efficace contre les Pokémon de type Normal
+depends_on_moves, ça dépend surtout des capacités utilisées

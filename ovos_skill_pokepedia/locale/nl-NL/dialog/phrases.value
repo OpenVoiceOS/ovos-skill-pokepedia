@@ -1,0 +1,29 @@
+very_strong, zeer sterke aanval
+strong, sterke aanval
+normal, gemiddelde aanval
+weak, zwakke aanval
+very_weak, zeer zwakke aanval
+fire, Vuur
+water, Water
+grass, Plant
+electric, Elektrisch
+ice, IJs
+fighting, Vecht
+poison, Gif
+ground, Grond
+flying, Vlieg
+psychic, Psychisch
+bug, Insect
+rock, Steen
+ghost, Spook
+dragon, Draak
+dark, Duister
+steel, Staal
+fairy, Fee
+normal_type, Normaal
+no_specific_advantages, geen specifieke type-voordelen
+strong_against_grass, sterk tegen Plant-types
+strong_against_fire, sterk tegen Vuur-types
+strong_against_water, sterk tegen Water-types
+strong_against_normal, sterk tegen Normaal-types
+depends_on_moves, het hangt af van de gebruikte aanvallen

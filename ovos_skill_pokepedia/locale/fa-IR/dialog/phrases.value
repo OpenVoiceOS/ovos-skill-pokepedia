@@ -1,0 +1,29 @@
+very_strong,حمله بسیار قوی
+strong,حمله قوی
+normal,حمله متوسط
+weak,حمله ضعیف
+very_weak,حمله بسیار ضعیف
+fire,آتش
+water,آب
+grass,گندم
+electric,الکتریکی
+ice,یخ
+fighting,مبارزه
+poison,مسمومیت
+ground,زمین
+flying,پرواز
+psychic,روانشناختی
+bug,حشره
+rock,سنگ
+ghost,ارواح
+dragon,اژدها
+dark,تاریک
+steel,فولاد
+fairy,پری
+normal_type,معمولی
+no_specific_advantages,هیچ مزایای خاص
+strong_against_grass,قوی در برابر انواع گندم
+strong_against_fire,قوی در برابر انواع آتش
+strong_against_water,قوی در برابر انواع آب
+strong_against_normal,قوی در برابر انواع معمولی
+depends_on_moves,بستگی به حرکات مورد استفاده دارد

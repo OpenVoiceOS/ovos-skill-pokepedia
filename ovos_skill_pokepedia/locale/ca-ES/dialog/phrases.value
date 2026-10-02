@@ -1,0 +1,29 @@
+very_strong, atac molt fort
+strong, atac fort
+normal, atac mitjà
+weak, atac feble
+very_weak, atac molt feble
+fire, Foc
+water, Aigua
+grass, Planta
+electric, Elèctric
+ice, Gel
+fighting, Lluita
+poison, Verí
+ground, Terra
+flying, Volador
+psychic, Psíquic
+bug, Insecte
+rock, Roca
+ghost, Fantasma
+dragon, Drac
+dark, Sinistre
+steel, Acer
+fairy, Fada
+normal_type, Normal
+no_specific_advantages, sense avantatges de tipus específics
+strong_against_grass, fort contra tipus Planta
+strong_against_fire, fort contra tipus Foc
+strong_against_water, fort contra tipus Aigua
+strong_against_normal, fort contra tipus Normal
+depends_on_moves, depèn dels moviments usats

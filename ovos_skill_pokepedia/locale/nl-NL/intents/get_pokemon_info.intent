@@ -1,0 +1,6 @@
+(vertel me [alles]|wat weet je) over de pokemon {pokemon}
+(beschrijf|wie is|wat is) de pokemon {pokemon}
+[geef me] (info|informatie) over de pokemon {pokemon}
+pokedex vermelding voor {pokemon}
+pokedex [vermelding] {pokemon}
+pokemon {pokemon}
