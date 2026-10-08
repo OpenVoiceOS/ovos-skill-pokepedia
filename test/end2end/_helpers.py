@@ -44,37 +44,29 @@ _PADATIOUS_PIPELINE = [
 # version. Matching either keeps the assertion immune to that rename.
 _SPOKE = {"speak", "ovos.utterance.speak"}
 
-GOLDEN_PATH = Path(__file__).parent / "golden_utterances.jsonl"
+GOLDEN_DIR = Path(__file__).parent
+
+
+def golden_langs() -> list:
+    """Return every language that has a ``golden_utterances_<lang>.jsonl`` file."""
+    return sorted(p.stem.removeprefix("golden_utterances_")
+                  for p in GOLDEN_DIR.glob("golden_utterances_*.jsonl"))
 
 
 def load_golden_rows(lang: str) -> list:
-    """Return the golden rows of one language.
+    """Return the golden rows of one language."""
+    path = GOLDEN_DIR / f"golden_utterances_{lang}.jsonl"
+    with open(path, encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
 
-    A row without a ``lang`` key belongs to en-US, the reference locale.
+
+def golden_params(rows: list) -> list:
+    """Every row runs as a real assertion.
+
+    ``needs_manual`` marks a row no native speaker has vouched for; it does
+    not mark a known failure, so it never turns a row into an xfail.
     """
-    rows = []
-    with open(GOLDEN_PATH, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            row = json.loads(line)
-            if row.get("lang", "en-US") == lang:
-                rows.append(row)
-    return rows
-
-
-def golden_params(rows: list, needs_manual_reasons: dict) -> list:
-    params = []
-    for row in rows:
-        if row.get("needs_manual"):
-            reason = needs_manual_reasons.get(row["utterance"])
-            assert reason, f"missing needs_manual reason for {row['utterance']!r}"
-            params.append(pytest.param(row, id=row["utterance"],
-                                       marks=pytest.mark.xfail(strict=True, reason=reason)))
-        else:
-            params.append(pytest.param(row, id=row["utterance"]))
-    return params
+    return [pytest.param(row, id=row["utterance"]) for row in rows]
 
 
 def _intent_candidates(intent_name: str) -> set:
