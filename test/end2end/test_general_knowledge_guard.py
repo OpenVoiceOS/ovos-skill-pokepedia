@@ -4,7 +4,7 @@
 fix; only ``pokemon_a``/``pokemon_b`` feed ``battle.intent``). Combined with
 unanchored ``get_pokemon_info`` templates such as ``(describe|who is|what
 is) [the pokemon] {pokemon}``, general-knowledge questions with no mention
-of Pokémon at all matched at padatious-HIGH and then
+of Pokémon at all matched at the intent engine's high tier and then
 ``_resolve_pokemon_name``'s fuzzy matcher (threshold >= 0.6) picked an
 arbitrary pokedex entry and spoke it -- installing the skill broke
 unrelated general queries assistant-wide.
@@ -18,54 +18,54 @@ from unittest import TestCase
 
 from ._helpers import IntentRoutingMixin, SKILL_ID
 
-_PADATIOUS_HIGH = ["ovos-padatious-pipeline-plugin-high"]
+_PADACIOSO_HIGH = ["ovos-padacioso-pipeline-plugin-high"]
 
 
 class TestGeneralKnowledgeGuard(IntentRoutingMixin, TestCase):
     LANG = "en-US"
 
-    def _padatious_high_types(self, utterance):
-        types = self._capture(utterance, _PADATIOUS_HIGH)
+    def _padacioso_high_types(self, utterance):
+        types = self._capture(utterance, _PADACIOSO_HIGH)
         return [t for t in types if t.startswith(f"{SKILL_ID}:")]
 
     def test_president_of_france_does_not_match(self):
         self.assertFalse(
-            self._padatious_high_types("who is the president of france")
+            self._padacioso_high_types("who is the president of france")
         )
 
     def test_eiffel_tower_does_not_match(self):
         self.assertFalse(
-            self._padatious_high_types("describe the eiffel tower")
+            self._padacioso_high_types("describe the eiffel tower")
         )
 
     def test_weather_does_not_match(self):
         self.assertFalse(
-            self._padatious_high_types("tell me about the weather")
+            self._padacioso_high_types("tell me about the weather")
         )
 
     def test_capital_of_spain_does_not_match(self):
         self.assertFalse(
-            self._padatious_high_types("what is the capital of spain")
+            self._padacioso_high_types("what is the capital of spain")
         )
 
     def test_weather_does_not_match_type_intent(self):
         self.assertFalse(
-            self._padatious_high_types("what type is the weather")
+            self._padacioso_high_types("what type is the weather")
         )
 
     def test_anchored_tell_me_about_still_matches(self):
         self._assert_intent(
             "tell me about the pokemon pikachu", "get_pokemon_info",
-            padatious=True,
+            padacioso=True,
         )
 
     def test_anchored_describe_still_matches(self):
         self._assert_intent(
             "describe the pokemon charizard", "get_pokemon_info",
-            padatious=True,
+            padacioso=True,
         )
 
     def test_bare_pokemon_slot_still_matches(self):
         self._assert_intent(
-            "pokemon bulbasaur", "get_pokemon_info", padatious=True
+            "pokemon bulbasaur", "get_pokemon_info", padacioso=True
         )

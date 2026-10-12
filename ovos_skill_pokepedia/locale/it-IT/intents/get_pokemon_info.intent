@@ -1,4 +1,7 @@
-(dimmi tutto su|parlami di|dimmi qualcosa su) il pokemon {pokemon}
+(dimmi tutto sul|parlami del|dimmi qualcosa sul) pokemon {pokemon}
 (descrivi|cos'è|chi è) il pokemon {pokemon}
-informazioni su il pokemon {pokemon}
+informazioni sul pokemon {pokemon}
 pokemon {pokemon}
+# machine-translated (linguonnx, unreviewed)
+(dimmi [tutto]|cosa sai) riguardo al pokemon {pokemon}
+voce pokedex per {pokemon}

@@ -2,8 +2,8 @@
 
 Utterances are drawn from the fr-FR locale files (``tell_me.voc``,
 ``type.voc``, ``battle.intent``), not machine-translated from English. Same
-three intent families as en-US: the Padatious ``get_pokemon_info`` and
-``get_pokemon_type`` intents and the Padatious ``battle.intent``.
+three intent families as en-US: the ``get_pokemon_info`` and
+``get_pokemon_type`` intents and ``battle.intent``, routed by padacioso.
 """
 from unittest import TestCase
 
@@ -13,24 +13,24 @@ from ._helpers import IntentRoutingMixin
 class TestFrIntentRouting(IntentRoutingMixin, TestCase):
     LANG = "fr-FR"
 
-    def test_info_routes_through_padatious(self):
+    def test_info_routes_through_padacioso(self):
         self._assert_intent(
-            "présente-moi le pokémon pikachu", "get_pokemon_info", padatious=True
+            "présente-moi le pokémon pikachu", "get_pokemon_info", padacioso=True
         )
 
-    def test_type_routes_through_padatious(self):
+    def test_type_routes_through_padacioso(self):
         self._assert_intent(
-            "quel est le type du pokémon charizard", "get_pokemon_type", padatious=True
+            "quel est le type du pokémon charizard", "get_pokemon_type", padacioso=True
         )
 
-    def test_battle_routes_through_padatious(self):
+    def test_battle_routes_through_padacioso(self):
         self._assert_routes(
             "qui gagne entre pikachu et bulbasaur", "battle.intent",
-            padatious=True,
+            padacioso=True,
         )
 
-    def test_battle_speaks_after_padatious_match(self):
+    def test_battle_speaks_after_padacioso_match(self):
         self._assert_intent(
             "qui gagne entre pikachu et bulbasaur", "battle.intent",
-            padatious=True,
+            padacioso=True,
         )

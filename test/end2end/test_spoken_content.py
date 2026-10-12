@@ -19,7 +19,7 @@ from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance
 
 from ovos_skill_pokepedia.api_client import PokemonPokeAPIError
 
-from ._helpers import SKILL_ID, _PADATIOUS_PIPELINE
+from ._helpers import SKILL_ID, _PADACIOSO_PIPELINE
 from .fixtures import fake_get_pokemon
 
 LANG = "en-US"
@@ -83,7 +83,7 @@ def _assert_real_content(spoken, must_contain):
 def test_battle_speaks_rendered_result(minicroft):
     spoken = _spoken_utterances(
         minicroft, "who wins charmander or pikachu", "battle-content",
-        pipeline=_PADATIOUS_PIPELINE,
+        pipeline=_PADACIOSO_PIPELINE,
     )
     _assert_real_content(spoken, ["charmander", "pikachu", "winner"])
 
@@ -92,7 +92,7 @@ def test_battle_speaks_rendered_result(minicroft):
 def test_info_speaks_rendered_content(minicroft):
     spoken = _spoken_utterances(
         minicroft, "tell me about the pokemon pikachu", "info-content",
-        pipeline=_PADATIOUS_PIPELINE,
+        pipeline=_PADACIOSO_PIPELINE,
     )
     _assert_real_content(spoken, ["pikachu", "pokedex"])
 
@@ -101,7 +101,7 @@ def test_info_speaks_rendered_content(minicroft):
 def test_moves_speaks_rendered_content(minicroft):
     spoken = _spoken_utterances(
         minicroft, "what moves does pikachu have", "moves-content",
-        pipeline=_PADATIOUS_PIPELINE,
+        pipeline=_PADACIOSO_PIPELINE,
     )
     _assert_real_content(spoken, ["pikachu", "moves"])
 
@@ -144,7 +144,7 @@ def test_backend_failure_speaks_real_not_found_message(minicroft):
     try:
         spoken = _spoken_utterances(
             minicroft, "tell me about the pokemon pikachu", "not-found-content",
-            pipeline=_PADATIOUS_PIPELINE,
+            pipeline=_PADACIOSO_PIPELINE,
         )
     finally:
         skill.api_client = original_client
