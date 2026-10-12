@@ -1,4 +1,6 @@
 welcher typ ist das pokemon {pokemon}
-welche(n) (typ|typen) hat das pokemon {pokemon}
+(welchen typ|welche typen) hat das pokemon {pokemon}
 typ[en] des pokemon {pokemon}
 das pokemon {pokemon} ist von welchem typ
+# machine-translated (linguonnx, unreviewed)
+das pokemon {pokemon} ist von welcher art

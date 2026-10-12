@@ -1,6 +1,8 @@
-Какой тип покемона? {pokemon}
-Что это за тип покемона? {pokemon}
-Какие типы покемонов? {pokemon}
-типа покемона {pokemon}
+какой тип у покемона {pokemon}
+что за тип у покемона {pokemon}
+какие типы у покемона {pokemon}
+назови типы покемона {pokemon}
 тип покемона {pokemon}
 покемон {pokemon} из какого типа
+# machine-translated (linguonnx, unreviewed)
+какой тип покемона {pokemon}

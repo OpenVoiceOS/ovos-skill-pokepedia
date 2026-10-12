@@ -10,3 +10,5 @@ battaglia tra {pokemon_a} e {pokemon_b}
 combattimento tra {pokemon_a} e {pokemon_b}
 confronta {pokemon_a} e {pokemon_b}
 {pokemon_a} o {pokemon_b} chi vince
+# machine-translated (linguonnx, unreviewed)
+{pokemon_a} (vs|versus|contro) {pokemon_b}

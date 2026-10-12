@@ -4,3 +4,6 @@
 entrada da pokedex para {pokemon}
 pokedex [entrada] {pokemon}
 pokemon {pokemon}
+# machine-translated (linguonnx, unreviewed)
+(diz-me [tudo]|o que você sabe) sobre o pokemon {pokemon}
+entrada pokedex para {pokemon}

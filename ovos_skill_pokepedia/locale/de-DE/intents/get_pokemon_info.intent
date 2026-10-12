@@ -4,3 +4,5 @@
 pokedex eintrag für {pokemon}
 pokedex [eintrag] {pokemon}
 pokemon {pokemon}
+# machine-translated (linguonnx, unreviewed)
+pokedex-eintrag für {pokemon}
