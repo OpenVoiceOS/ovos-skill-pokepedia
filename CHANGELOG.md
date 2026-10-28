@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.1a2) (2026-10-28)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.1a1...1.8.1a2)
+
+**Merged pull requests:**
+
+- test: run the end2end suite on the m2v prototype pipeline [\#73](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/73) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.8.1a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.1a1) (2026-10-02)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.0a1...1.8.1a1)
