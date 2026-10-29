@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.1a3) (2026-10-29)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.1a2...1.8.1a3)
+
+**Merged pull requests:**
+
+- test: golden and negative rows for every shipped locale [\#75](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/75) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.8.1a2](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.1a2) (2026-10-28)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.1a1...1.8.1a2)
