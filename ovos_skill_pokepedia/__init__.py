@@ -2,9 +2,12 @@
 
 Child-friendly voice skill for querying Pokémon data and battle predictions.
 """
+import json
+from pathlib import Path
 from typing import Optional
 
 from ovos_bus_client.session import SessionManager
+from ovos_spec_tools.language import closest_lang
 from ovos_utils.log import LOG
 from ovos_utils.parse import match_one
 from ovos_workshop.decorators import intent_handler
@@ -29,6 +32,7 @@ from .api_client import (
 # attribute would leak one session's last-looked-up Pokémon into every
 # other concurrent session's follow-up query.
 PREV_POKEMON_CONTEXT = "prev_pokemon"
+NAMES_DIR = Path(__file__).parent / "data" / "pokemon_names"
 
 
 class PokemonSkill(OVOSSkill):
@@ -67,34 +71,36 @@ class PokemonSkill(OVOSSkill):
     # ------------------------------------------------------------------ i18n
 
     def _phrase(self, key: str, lang: Optional[str] = None) -> str:
-        """Look up a localized phrase from phrases.value (key,value CSV).
+        """Render the ``<key>.dialog`` file of the active locale.
 
-        Used to translate internal labels — stat tiers, type names,
-        battle outcome blurbs — into the active locale's wording. Falls
-        back to the bare key if no entry exists.
+        Used to translate internal labels - stat tiers, type names,
+        battle outcome blurbs - into the active locale's wording. Falls
+        back to the bare key if no dialog exists.
         """
-        try:
-            mapping = self.resources.load_named_value_file("phrases")
-        except Exception:
-            mapping = {}
-        return mapping.get(key, key)
+        renderer = self.dialog_renderer
+        if renderer is None or key not in renderer.templates:
+            return key
+        return renderer.render(key)
 
     # --------------------------------------------------------------- helpers
 
+    def _name_table(self) -> dict:
+        """Load the name table of the closest shipped language, if any."""
+        available = {path.stem: path for path in NAMES_DIR.glob("*.json") if path.stem != "aliases"}
+        match = closest_lang(self.lang, list(available))
+        if match is None:
+            return {}
+        return json.loads(available[match].read_text(encoding="utf8"))
+
     def _load_name_aliases(self) -> dict:
         """Load localized Pokémon-name aliases mapped to PokeAPI slugs."""
-        try:
-            mapping = self.resources.load_named_value_file("pokemon.name.aliases")
-        except Exception:
-            mapping = {}
+        shared = json.loads((NAMES_DIR / "aliases.json").read_text(encoding="utf8"))
+        mapping = {**shared, **self._name_table().get("aliases", {})}
         return {alias.casefold(): canonical for alias, canonical in mapping.items()}
 
     def _localized_pokemon_name(self, canonical_name: str) -> str:
         """Return the active locale's display name for a PokeAPI slug."""
-        try:
-            mapping = self.resources.load_named_value_file("pokemon.name.display")
-        except Exception:
-            mapping = {}
+        mapping = self._name_table().get("display", {})
         return mapping.get(canonical_name, canonical_name.replace("-", " ").title())
 
     def _resolve_pokemon_name(self, name: str) -> str:
