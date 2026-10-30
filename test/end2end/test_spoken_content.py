@@ -15,12 +15,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from ovos_utils.log import LOG
-from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance_message
+from ovoscope.routing import TALLY
 
 from ovos_skill_pokepedia.api_client import PokemonPokeAPIError
 
-from ._helpers import SKILL_ID, _PADATIOUS_PIPELINE
-from .fixtures import fake_get_pokemon
+from ._helpers import SKILL_ID, boot_minicroft, capture, intent_topic
 
 LANG = "en-US"
 
@@ -38,28 +37,16 @@ _DIALOG_NAME_FALLBACKS = {
 @pytest.fixture(scope="module")
 def minicroft():
     LOG.set_level("CRITICAL")
-    mc = get_minicroft([SKILL_ID], lang=LANG)
-    loader = mc.plugin_skills[SKILL_ID]
-    skill = loader.instance
-    client = MagicMock()
-    client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
-    skill.api_client = client
+    mc = boot_minicroft(LANG)
     yield mc
     mc.stop()
 
 
-def _spoken_utterances(mc, text, session_id, pipeline):
-    session = make_session(
-        session_id=session_id,
-        pipeline=pipeline,
-        blacklisted_intents=[],
-        blacklisted_skills=[],
-        lang=LANG,
-    )
-    message = make_utterance_message(text, lang=LANG, session=session)
-    cap = CaptureSession(minicroft=mc)
-    cap.capture(message, timeout=15)
-    messages = cap.finish()
+def _spoken_utterances(mc, text, session_id, intent_name):
+    """What the skill spoke for ``text``, once it reached ``intent_name``."""
+    messages = capture(mc, text, LANG, session_id)
+    TALLY.assert_routed(text, intent_topic(intent_name),
+                        [m.msg_type for m in messages])
     return [
         m.data["utterance"]
         for m in messages
@@ -82,8 +69,7 @@ def _assert_real_content(spoken, must_contain):
 @pytest.mark.timeout(60)
 def test_battle_speaks_rendered_result(minicroft):
     spoken = _spoken_utterances(
-        minicroft, "who wins charmander or pikachu", "battle-content",
-        pipeline=_PADATIOUS_PIPELINE,
+        minicroft, "who wins charmander or pikachu", "battle-content", "battle",
     )
     _assert_real_content(spoken, ["charmander", "pikachu", "winner"])
 
@@ -91,8 +77,7 @@ def test_battle_speaks_rendered_result(minicroft):
 @pytest.mark.timeout(60)
 def test_info_speaks_rendered_content(minicroft):
     spoken = _spoken_utterances(
-        minicroft, "tell me about the pokemon pikachu", "info-content",
-        pipeline=_PADATIOUS_PIPELINE,
+        minicroft, "tell me about the pokemon pikachu", "info-content", "get_pokemon_info",
     )
     _assert_real_content(spoken, ["pikachu", "pokedex"])
 
@@ -100,8 +85,7 @@ def test_info_speaks_rendered_content(minicroft):
 @pytest.mark.timeout(60)
 def test_moves_speaks_rendered_content(minicroft):
     spoken = _spoken_utterances(
-        minicroft, "what moves does pikachu have", "moves-content",
-        pipeline=_PADATIOUS_PIPELINE,
+        minicroft, "what moves does pikachu have", "moves-content", "get_pokemon_moves",
     )
     _assert_real_content(spoken, ["pikachu", "moves"])
 
@@ -143,8 +127,7 @@ def test_backend_failure_speaks_real_not_found_message(minicroft):
     skill.api_client = failing_client
     try:
         spoken = _spoken_utterances(
-            minicroft, "tell me about the pokemon pikachu", "not-found-content",
-            pipeline=_PADATIOUS_PIPELINE,
+            minicroft, "tell me about the pokemon pikachu", "not-found-content", "get_pokemon_info",
         )
     finally:
         skill.api_client = original_client

@@ -5,24 +5,22 @@ the skill via ovoscope's MiniCroft — these unit tests cover pure helpers
 (type advantages, child-friendly formatting, fuzzy matcher, API client
 constructor) where a live bus is unnecessary.
 """
-import csv
+import json
 from pathlib import Path
 
 import pytest
+from ovos_workshop.resource_files import SkillResources
 
 
-LOCALE_DIR = Path(__file__).parents[1] / "ovos_skill_pokepedia" / "locale"
+PACKAGE_DIR = Path(__file__).parents[1] / "ovos_skill_pokepedia"
+LOCALE_DIR = PACKAGE_DIR / "locale"
+NAMES_DIR = PACKAGE_DIR / "data" / "pokemon_names"
 
 
-def _load_phrases(lang):
-    with (LOCALE_DIR / lang / "dialog" / "phrases.value").open(
-        encoding="utf-8", newline=""
-    ) as phrases_file:
-        return {
-            key.strip(): value.strip()
-            for key, value in csv.reader(phrases_file)
-            if key.strip()
-        }
+def _dialog_text(lang, key):
+    return (LOCALE_DIR / lang / "dialog" / f"{key}.dialog").read_text(
+        encoding="utf-8"
+    ).strip()
 
 
 class TestTypeAdvantage:
@@ -142,20 +140,13 @@ class TestFuzzyMatch:
         assert score < 0.6
 
 
-class _FakeResources:
-    def __init__(self, files):
-        self.files = files
-
-    def load_named_value_file(self, name):
-        return self.files.get(name, {})
-
-
 class TestSkillLocalizationHelpers:
     @staticmethod
-    def _make_skill(files, names=None, lang="fr-FR"):
+    def _make_skill(names=None, lang="fr-FR"):
         from ovos_skill_pokepedia import PokemonSkill
 
         class Harness:
+            _name_table = PokemonSkill._name_table
             _load_name_aliases = PokemonSkill._load_name_aliases
             _localized_pokemon_name = PokemonSkill._localized_pokemon_name
             _resolve_pokemon_name = PokemonSkill._resolve_pokemon_name
@@ -164,7 +155,9 @@ class TestSkillLocalizationHelpers:
             _join_for_speech = PokemonSkill._join_for_speech
 
             def __init__(self):
-                self.resources = _FakeResources(files)
+                self.dialog_renderer = SkillResources(
+                    str(PACKAGE_DIR), lang
+                ).dialog_renderer
                 self.lang = lang
 
             def voc_list(self, name):
@@ -173,93 +166,113 @@ class TestSkillLocalizationHelpers:
         return Harness()
 
     def test_resolve_french_name_to_api_slug(self):
-        skill = self._make_skill(
-            {"pokemon.name.aliases": {"salamèche": "charmander"}},
-            ["charmander", "salamèche"],
-        )
+        skill = self._make_skill(["charmander", "salamèche"])
 
         assert skill._resolve_pokemon_name("salamèche") == "charmander"
 
     def test_resolve_name_strips_slot_whitespace(self):
-        skill = self._make_skill({}, ["pikachu"])
+        skill = self._make_skill(["pikachu"])
 
         assert skill._resolve_pokemon_name(" Pikachu ") == "pikachu"
 
     def test_localized_display_name(self):
-        skill = self._make_skill(
-            {"pokemon.name.display": {"charmander": "Salamèche"}}
-        )
+        skill = self._make_skill()
 
         assert skill._localized_pokemon_name("charmander") == "Salamèche"
 
     def test_format_types_uses_type_specific_phrase(self):
-        skill = self._make_skill(
-            {
-                "phrases": {
-                    "normal": "correcte",
-                    "normal_type": "Normal",
-                    "flying_type": "Vol",
-                    "list_conjunction": "et",
-                }
-            }
+        skill = self._make_skill()
+
+        assert skill._format_types(["normal", "flying"]) == (
+            f"{_dialog_text('fr-FR', 'normal_type')} "
+            f"{_dialog_text('fr-FR', 'list_conjunction')} "
+            f"{_dialog_text('fr-FR', 'flying_type')}"
         )
-
-        assert skill._format_types(["normal", "flying"]) == "Normal et Vol"
-
-    @pytest.mark.parametrize(
-        ("lang", "phrases", "expected"),
-        [
-            (
-                "es-ES",
-                {
-                    "normal": "ataque medio",
-                    "normal_type": "Normal",
-                    "flying": "Volador",
-                },
-                "Normal y Volador",
-            ),
-            (
-                "it-IT",
-                {
-                    "normal": "attacco medio",
-                    "normal_type": "Normale",
-                    "flying": "Volante",
-                },
-                "Normale e Volante",
-            ),
-            (
-                "pt-PT",
-                {"normal": "ataque médio", "normal_type": "Normal", "flying": "Voador"},
-                "Normal e Voador",
-            ),
-        ],
-    )
-    def test_format_types_avoids_normal_stat_collision_in_other_locales(
-        self, lang, phrases, expected
-    ):
-        skill = self._make_skill({"phrases": phrases}, lang=lang)
-
-        assert skill._format_types(["normal", "flying"]) == expected
-
-    def test_resolve_name_without_alias_file_uses_existing_vocab(self):
-        skill = self._make_skill({}, ["pikachu", "charizard"], lang="es-ES")
-
-        assert skill._resolve_pokemon_name("charzard") == "charizard"
-
-    def test_display_name_without_locale_file_falls_back_to_canonical_title(self):
-        skill = self._make_skill({}, lang="it-IT")
-
-        assert skill._localized_pokemon_name("mr-mime") == "Mr Mime"
 
     @pytest.mark.parametrize(
         ("lang", "expected"),
-        [("es-ES", "Normal"), ("it-IT", "Normale"), ("pt-PT", "Normal")],
+        [
+            ("es-ES", "Normal y Volador"),
+            ("it-IT", "Normale e Volante"),
+            ("pt-PT", "Normal e Voador"),
+        ],
     )
-    def test_non_french_phrase_files_distinguish_normal_type(self, lang, expected):
-        phrases = _load_phrases(lang)
+    def test_format_types_avoids_normal_stat_collision_in_other_locales(
+        self, lang, expected
+    ):
+        skill = self._make_skill(lang=lang)
 
-        assert phrases["normal_type"] == expected
-        assert phrases["normal_type"] != phrases["normal"]
+        assert skill._format_types(["normal", "flying"]) == expected
+
+    def test_resolve_name_uses_shared_aliases_without_language_table(self):
+        skill = self._make_skill(["pikachu", "charizard"], lang="es-ES")
+
+        assert skill._resolve_pokemon_name("charzard") == "charizard"
+        assert skill._resolve_pokemon_name("mr mime") == "mr-mime"
+
+    def test_display_name_without_language_table_falls_back_to_canonical_title(self):
+        skill = self._make_skill(lang="it-IT")
+
+        assert skill._localized_pokemon_name("mr-mime") == "Mr Mime"
+
+    @pytest.mark.parametrize("lang", ["fr", "fr-FR", "fr-CA"])
+    def test_language_table_resolves_regional_variants(self, lang):
+        skill = self._make_skill(lang=lang)
+
+        assert skill._localized_pokemon_name("bulbasaur") == "Bulbizarre"
+
+    @pytest.mark.parametrize(
+        ("lang", "key"),
+        [
+            ("en-US", "very_strong"),
+            ("en-US", "fire"),
+            ("fr-FR", "very_strong"),
+            ("fr-FR", "list_conjunction"),
+        ],
+    )
+    def test_phrase_returns_dialog_file_text(self, lang, key):
+        skill = self._make_skill(lang=lang)
+
+        assert skill._phrase(key) == _dialog_text(lang, key)
+
+    def test_phrase_without_dialog_returns_bare_key(self):
+        skill = self._make_skill(lang="en-US")
+
+        assert skill._phrase("no_such_key") == "no_such_key"
+
+    @pytest.mark.parametrize("name", ["bulbizarre", "salamèche"])
+    def test_french_alias_lookup_matches_json(self, name):
+        table = json.loads((NAMES_DIR / "fr-FR.json").read_text(encoding="utf-8"))
+        skill = self._make_skill(lang="fr-FR")
+
+        assert skill._load_name_aliases()[name] == table["aliases"][name]
+
+    @pytest.mark.parametrize("slug", ["bulbasaur", "charmander"])
+    def test_french_display_lookup_matches_json(self, slug):
+        table = json.loads((NAMES_DIR / "fr-FR.json").read_text(encoding="utf-8"))
+        skill = self._make_skill(lang="fr-FR")
+
+        assert skill._localized_pokemon_name(slug) == table["display"][slug]
+
+    def test_shared_aliases_match_json(self):
+        shared = json.loads((NAMES_DIR / "aliases.json").read_text(encoding="utf-8"))
+        skill = self._make_skill(lang="en-US")
+
+        assert skill._load_name_aliases() == {
+            alias.casefold(): slug for alias, slug in shared.items()
+        }
+
+
+class TestResourceRoles:
+    def test_no_value_files_under_locale(self):
+        assert sorted(LOCALE_DIR.rglob("*.value")) == []
+
+    def test_every_dialog_base_name_is_compliant(self):
+        import re
+
+        names = [p.stem for p in LOCALE_DIR.rglob("*.dialog")]
+        assert names
+        assert [n for n in names if not re.fullmatch(r"[a-z0-9_]+", n)] == []
 
 
 if __name__ == "__main__":

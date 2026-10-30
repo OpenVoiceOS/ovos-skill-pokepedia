@@ -1,140 +1,69 @@
-"""Golden-utterance end-to-end coverage for ovos-skill-pokepedia (en-US).
-
-The master ovoscope corpus carries no rows for
-``ovos-skill-pokepedia.openvoiceos``, so ``golden_utterances.jsonl`` is
-derived from this skill's own vocab (``tell_me``/``pokemon``/``moves``/
-``type``) covering all three Padatious file intents
-(``get_pokemon_info``, ``get_pokemon_type``, ``get_pokemon_moves`` -- the last of
-which had no e2e coverage at all before this suite, existing
-``test_intents_*.py`` files only covered info/type/battle).
-
-See also the entity-registration ordering fix in
-``ovos_skill_pokepedia/__init__.py``'s ``initialize()``, which fixed a real,
-separate defect (``battle.intent``'s ``{pokemon_a}``/``{pokemon_b}``
-entities were never trained at all).
-
-Follows the existing ``test/end2end/_helpers.py`` infrastructure: the
-PokeAPI backend is mocked deterministically (``fixtures.fake_get_pokemon``)
-for every routing assertion, and one graceful-failure test drives the real
-``PokemonPokeAPIError`` path to confirm the skill degrades to
-``error.not.found`` rather than crashing.
-
-Run:
-    uv run pytest test/end2end/test_golden_utterances.py -v
-"""
-from unittest.mock import MagicMock
+"""Golden rows route to their intent on the m2v prototype pipeline, and
+negative rows reach no intent of this skill."""
+import json
+from pathlib import Path
 
 import pytest
-from ovos_utils.log import LOG
-from ovoscope import CaptureSession, get_minicroft, make_session, make_utterance_message
+from ovos_bus_client.message import Message
+from ovoscope.routing import TALLY, get_prototype_minicroft
 
-from ovos_skill_pokepedia.api_client import PokemonPokeAPIError
-
-from ._helpers import (
-    SKILL_ID, _ADAPT_PIPELINE, _PADATIOUS_PIPELINE, _SPOKE, _intent_candidates,
-    golden_params, load_golden_rows,
-)
-from .fixtures import fake_get_pokemon
-
-# Per-row reason for rows marked needs_manual: true in golden_utterances.jsonl.
-# The standard requires every row to run (as a real assertion, strict-xfailed
-# with a reason if it's a known gap) rather than being silently skipped.
-_NEEDS_MANUAL_REASONS = {}
-
-LANG = "en-US"
-
-# Confusables from other skills' domains, picked for lexical overlap with
-# "tell me about"/"type of"/"moves" phrasing.
-NEGATIVE_UTTERANCES = [
-    ("tell me about the weather", "ovos-skill-weather.openvoiceos"),
-    ("tell me about yourself", "ovos-skill-personal.openvoiceos"),
-    ("what type of music is this", "ovos-skill-music.openvoiceos"),
-    ("who is confucius", "ovos-skill-confucius-quotes.openvoiceos"),
-    ("play some music", "ovos-skill-music.openvoiceos"),
-    ("search the web for cats", "ovos-skill-ddg.openvoiceos"),
-    ("set a timer for 5 minutes", "ovos-skill-alerts.openvoiceos"),
-]
+SKILL_ID = "ovos-skill-pokepedia.openvoiceos"
+END2END_DIR = Path(__file__).parent
 
 
-GOLDEN_ROWS = golden_params(load_golden_rows(LANG), _NEEDS_MANUAL_REASONS)
+def _rows(prefix):
+    rows = []
+    for path in sorted(END2END_DIR.glob(f"{prefix}*.jsonl")):
+        rows += [{"lang": "en-US", **json.loads(line)}
+                 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return rows
+
+
+GOLDEN = _rows("golden_utterances")
+NEGATIVE = _rows("negative_utterances_")
+_booted = {}
 
 
 @pytest.fixture(scope="module")
-def minicroft():
-    LOG.set_level("CRITICAL")
-    mc = get_minicroft([SKILL_ID], lang=LANG)
-    loader = mc.plugin_skills[SKILL_ID]
-    skill = loader.instance
-    client = MagicMock()
-    client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
-    skill.api_client = client
-    yield mc
-    mc.stop()
+def engine_for():
+    def engine(lang):
+        if lang not in _booted:
+            for minicroft in _booted.values():
+                minicroft.stop()
+            _booted.clear()
+            _booted[lang] = get_prototype_minicroft([SKILL_ID], lang=lang)
+        return _booted[lang].intents.pipeline_plugins["ovos-m2v-prototype-pipeline"]
+    yield engine
+    for minicroft in _booted.values():
+        minicroft.stop()
 
 
-def _capture(mc, text, session_id, pipeline=_ADAPT_PIPELINE):
-    session = make_session(
-        session_id=session_id,
-        pipeline=pipeline,
-        blacklisted_intents=[],
-        blacklisted_skills=[],
-        lang=LANG,
-    )
-    message = make_utterance_message(text, lang=LANG, session=session)
-    cap = CaptureSession(minicroft=mc)
-    cap.capture(message, timeout=15)
-    return [m.msg_type for m in cap.finish()]
+def _routed(engine, utterance, lang):
+    message = Message("recognizer_loop:utterance",
+                      {"utterances": [utterance], "lang": lang}, {"lang": lang})
+    match = engine.match_low([utterance], lang, message)
+    return [match.match_type] if match else []
 
 
-@pytest.mark.timeout(60)
-@pytest.mark.parametrize("row", GOLDEN_ROWS, ids=lambda r: r["utterance"])
-def test_golden_utterance(minicroft, row):
-    candidates = _intent_candidates(row["intent_label"])
-    pipeline = _PADATIOUS_PIPELINE if row["intent_type"] == "padatious" else _ADAPT_PIPELINE
-    types = _capture(minicroft, row["utterance"], f"golden-{row['utterance']}", pipeline=pipeline)
-    assert any(t in candidates for t in types), (
-        f"{row['utterance']!r}: expected one of {sorted(candidates)!r}, got {types!r}"
-    )
-    assert set(types) & _SPOKE, (
-        f"{row['utterance']!r} matched one of {sorted(candidates)!r} but the skill never spoke: {types!r}"
-    )
+def _row_id(row):
+    return f"{row['lang']}:{row['utterance']}"
 
 
-@pytest.mark.timeout(60)
-@pytest.mark.parametrize("negative", NEGATIVE_UTTERANCES, ids=lambda n: n[0])
-def test_negative_confusable_not_claimed(minicroft, negative):
-    text, source_skill = negative
-    # single-tier: highest-confidence Adapt only, per this repo's own
-    # _assert_no_intent convention.
-    types = _capture(minicroft, text, f"negative-{text}", pipeline=_ADAPT_PIPELINE[:1])
-    skill_intents = [t for t in types if t.startswith(f"{SKILL_ID}:")]
-    assert not skill_intents, (
-        f"{text!r} (from {source_skill}) was incorrectly claimed by {SKILL_ID}: {skill_intents!r}"
-    )
+@pytest.mark.parametrize("row", GOLDEN, ids=_row_id)
+def test_golden_row_routes_to_its_intent(engine_for, row):
+    fired = _routed(engine_for(row["lang"]), row["utterance"], row["lang"])
+    TALLY.assert_routed(row["utterance"], f"{SKILL_ID}:{row['intent_label']}", fired)
 
 
-@pytest.mark.timeout(30)
-def test_pokeapi_failure_is_graceful(minicroft):
-    """If the PokeAPI backend raises, the skill must speak "error.not.found"
-    gracefully rather than crash the handler or leave the utterance
-    unhandled."""
-    loader = minicroft.plugin_skills[SKILL_ID]
-    skill = loader.instance
-    original_client = skill.api_client
-    failing_client = MagicMock()
-    failing_client.get_pokemon.side_effect = PokemonPokeAPIError("simulated PokeAPI outage")
-    skill.api_client = failing_client
-    try:
-        types = _capture(
-            minicroft, "tell me about the pokemon pikachu", "graceful-failure",
-            pipeline=_PADATIOUS_PIPELINE,
-        )
-    finally:
-        skill.api_client = original_client
+@pytest.mark.parametrize("row", NEGATIVE, ids=_row_id)
+def test_negative_row_reaches_no_intent_of_the_skill(engine_for, row):
+    fired = _routed(engine_for(row["lang"]), row["utterance"], row["lang"])
+    TALLY.assert_not_routed(row["utterance"],
+                            [t for t in fired if t.startswith(f"{SKILL_ID}:")], fired)
 
-    assert f"{SKILL_ID}:get_pokemon_info" in types, (
-        f"expected the intent to still route despite backend failure, got {types!r}"
-    )
-    assert set(types) & _SPOKE, (
-        f"expected a graceful spoken fallback response, got {types!r}"
-    )
+
+def test_every_shipping_locale_has_a_golden_file():
+    golden = {p.stem.split("_", 2)[2] for p in END2END_DIR.glob("golden_utterances_*.jsonl")}
+    locale_root = END2END_DIR.parents[1] / "ovos_skill_pokepedia" / "locale"
+    shipping = {d.name for d in locale_root.iterdir() if d.is_dir() and any(d.rglob("*.intent"))}
+    assert golden == shipping, f"golden files {sorted(golden ^ shipping)} differ from shipping locales"

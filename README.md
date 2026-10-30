@@ -25,7 +25,7 @@ pip install ovos-skill-pokepedia
 
 ```bash
 # Install the skill and test dependencies
-pip install -e . -r test/requirements.txt
+pip install -e '.[test]'
 
 # Run the tests
 pytest test/
