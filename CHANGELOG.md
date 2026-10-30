@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.3a1) (2026-10-30)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.2a1...1.8.3a1)
+
+**Merged pull requests:**
+
+- fix\(locale\): drop dead vocabulary files [\#72](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/72) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.8.2a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.2a1) (2026-10-30)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.1a3...1.8.2a1)
