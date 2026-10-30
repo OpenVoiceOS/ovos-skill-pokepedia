@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
+    "ovos-spec-tools>=1.11.0a1",
     "ovos-utils>=0.0.38",
     "ovos-workshop>=9.6.7a3,<10.0.0",
     "requests>=2.31.0",
@@ -52,7 +53,7 @@ version = { attr = "ovos_skill_pokepedia.version.__version__" }
 include = ["ovos_skill_pokepedia*"]
 
 [tool.setuptools.package-data]
-ovos_skill_pokepedia = ["locale/**/*", "*.json"]
+ovos_skill_pokepedia = ["locale/**/*", "data/**/*.json", "*.json"]
 
 [tool.pytest.ini_options]
 ovoscope_min_routing_rate = 0.95

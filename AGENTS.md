@@ -97,7 +97,7 @@ This is the supported way to mock the network in tests. Do not mock
 ## Tests
 
 ```bash
-pip install -e . -r test/requirements.txt
+pip install -e '.[test]'
 pytest test/                        # 111 tests
 pytest test/end2end/ -v             # 93 ovoscope intent-routing tests
 pytest test/test_pokepedia.py -v    # 18 helper unit tests
