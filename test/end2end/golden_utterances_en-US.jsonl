@@ -22,3 +22,8 @@
 {"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "which one is stronger charizard or bulbasaur", "lang": "en-US", "intent_label": "battle", "machine_generated": true, "needs_manual": true, "rewritten_from": "who is stronger charizard or bulbasaur"}
 {"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "who would win in a battle between mewtwo and gengar", "lang": "en-US", "intent_label": "battle", "machine_generated": true, "needs_manual": true}
 {"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "can squirtle defeat charmander", "lang": "en-US", "intent_label": "battle", "machine_generated": true, "needs_manual": true}
+{"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "what does charmander evolve into", "lang": "en-US", "intent_label": "get_pokemon_evolution", "machine_generated": true, "needs_manual": true}
+{"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "does pikachu evolve", "lang": "en-US", "intent_label": "get_pokemon_evolution", "machine_generated": true, "needs_manual": true}
+{"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "what is the next evolution of bulbasaur", "lang": "en-US", "intent_label": "get_pokemon_evolution", "machine_generated": true, "needs_manual": true}
+{"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "evolution of squirtle", "lang": "en-US", "intent_label": "get_pokemon_evolution", "machine_generated": true, "needs_manual": true}
+{"skill_id": "ovos-skill-pokepedia.openvoiceos", "utterance": "what about its moves", "lang": "en-US", "intent_label": "get_pokemon_moves", "machine_generated": true, "needs_manual": true}
