@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.2a1](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.2a1) (2026-10-30)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.1a3...1.8.2a1)
+
+**Merged pull requests:**
+
+- fix: replace .value files with .dialog files and package data [\#78](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/pull/78) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.8.1a3](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/tree/1.8.1a3) (2026-10-29)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-skill-pokepedia/compare/1.8.1a2...1.8.1a3)
