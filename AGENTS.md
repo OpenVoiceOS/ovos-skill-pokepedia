@@ -41,9 +41,9 @@ Each intent uses exactly one pipeline. Do not duplicate intents across both.
 
 | Intent              | Engine    | Source files                              |
 |---------------------|-----------|-------------------------------------------|
-| `GetPokemonInfo`    | Adapt     | `TellMeKeyword.voc` + `PokemonName.voc`   |
-| `GetPokemonMoves`   | Adapt     | `MovesKeyword.voc` + `PokemonName.voc`    |
-| `GetPokemonType`    | Adapt     | `TypeKeyword.voc` + `PokemonName.voc`     |
+| `get_pokemon_info`    | Adapt     | `TellMeKeyword.voc` + `PokemonName.voc`   |
+| `get_pokemon_moves`   | Adapt     | `MovesKeyword.voc` + `PokemonName.voc`    |
+| `get_pokemon_type`    | Adapt     | `TypeKeyword.voc` + `PokemonName.voc`     |
 | `BattleComparison`  | Padatious | `battle.intent` + `PokemonA.entity` + `PokemonB.entity` |
 
 Info/moves/type each have an unambiguous trigger keyword and a single entity
@@ -97,7 +97,7 @@ This is the supported way to mock the network in tests. Do not mock
 ## Tests
 
 ```bash
-pip install -e . -r test/requirements.txt
+pip install -e '.[test]'
 pytest test/                        # 111 tests
 pytest test/end2end/ -v             # 93 ovoscope intent-routing tests
 pytest test/test_pokepedia.py -v    # 18 helper unit tests

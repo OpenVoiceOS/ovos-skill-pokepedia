@@ -80,35 +80,43 @@ class PokeAPIClient:
     BASE_URL = "https://pokeapi.co/api/v2"
     TIMEOUT = 10
 
+    @staticmethod
+    def _clean_name(name: str) -> str:
+        return str(name).strip().lower()
+
     @lru_cache(maxsize=100)
     def get_pokemon(self, name: str) -> dict:
         """Fetch Pokémon by name (case-insensitive)."""
+        name = self._clean_name(name)
         response = requests.get(
-            f"{self.BASE_URL}/pokemon/{name.lower()}", timeout=self.TIMEOUT
+            f"{self.BASE_URL}/pokemon/{name}", timeout=self.TIMEOUT
         )
         response.raise_for_status()
         return response.json()
 
     def get_type(self, type_name: str) -> dict:
         """Fetch type by name."""
+        type_name = self._clean_name(type_name)
         response = requests.get(
-            f"{self.BASE_URL}/type/{type_name.lower()}", timeout=self.TIMEOUT
+            f"{self.BASE_URL}/type/{type_name}", timeout=self.TIMEOUT
         )
         response.raise_for_status()
         return response.json()
 
     def get_move(self, move_name: str) -> dict:
         """Fetch move by name."""
+        move_name = self._clean_name(move_name)
         response = requests.get(
-            f"{self.BASE_URL}/move/{move_name.lower()}", timeout=self.TIMEOUT
+            f"{self.BASE_URL}/move/{move_name}", timeout=self.TIMEOUT
         )
         response.raise_for_status()
         return response.json()
 
     def get_ability(self, ability_name: str) -> dict:
         """Fetch ability by name."""
+        ability_name = self._clean_name(ability_name)
         response = requests.get(
-            f"{self.BASE_URL}/ability/{ability_name.lower()}", timeout=self.TIMEOUT
+            f"{self.BASE_URL}/ability/{ability_name}", timeout=self.TIMEOUT
         )
         response.raise_for_status()
         return response.json()

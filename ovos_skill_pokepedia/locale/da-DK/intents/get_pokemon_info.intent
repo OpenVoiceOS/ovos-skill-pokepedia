@@ -1,0 +1,9 @@
+(fortæl mig [alt]|hvad ved du) om pokemonen {pokemon}
+(beskriv|hvem er|hvad er) pokemonen {pokemon}
+[giv mig] (info|information) om pokemonen {pokemon}
+pokedex opslag for {pokemon}
+pokedex [opslag] {pokemon}
+pokemon {pokemon}
+# The line below is not andlo's and is not vouched: it is new phrasing
+# from the machine cut, kept for recognition coverage. Pending andlo.
+pokedex opslag om {pokemon}

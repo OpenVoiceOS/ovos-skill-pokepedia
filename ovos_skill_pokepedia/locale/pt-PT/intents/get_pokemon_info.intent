@@ -1,0 +1,4 @@
+(fala-me (de|sobre)|diz-me tudo sobre|conta-me sobre) o pokemon {pokemon}
+(descreve|o que é|quem é) o pokemon {pokemon}
+informação sobre o pokemon {pokemon}
+pokemon {pokemon}

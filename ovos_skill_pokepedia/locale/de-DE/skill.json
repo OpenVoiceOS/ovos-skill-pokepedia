@@ -1,0 +1,17 @@
+{
+  "skill_id": "ovos-skill-pokepedia.openvoiceos",
+  "source": "https://github.com/OpenVoiceOS/ovos-skill-pokepedia",
+  "name": "Pokepedia",
+  "description": "Answer questions about Pokemon and compare two of them by type advantage.",
+  "examples": [
+    "muk gegen muk",
+    "pokemon muk",
+    "welcher typ ist das pokemon muk"
+  ],
+  "tags": [
+    "pokemon",
+    "pokeapi",
+    "battle",
+    "entertainment"
+  ]
+}
