@@ -1,0 +1,21 @@
+# Slot-value exclusion for the {pokemon} slot (OVOS-INTENT-2 §4.3).
+#
+# Every pronoun phrasing this skill ships has a slotted sibling that can
+# swallow it: "what does it evolve into" matches
+# "what does {pokemon} evolve into" with pokemon="it". The slot is then
+# non-empty, the prev_pokemon fallback is never consulted, and the API is
+# asked for a Pokemon called "it".
+#
+# Excluding the pronouns leaves the slot unfilled for that turn, so the
+# follow-up resolves to the Pokemon of the previous turn, which is what the
+# pronoun means.
+it
+its
+that
+this
+that one
+this one
+them
+those
+these
+they

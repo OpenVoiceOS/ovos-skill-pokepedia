@@ -121,6 +121,23 @@ class PokeAPIClient:
         response.raise_for_status()
         return response.json()
 
+    def get_species(self, name: str) -> dict:
+        """Fetch Pokémon species data (holds the evolution chain link)."""
+        name = self._clean_name(name)
+        response = requests.get(
+            f"{self.BASE_URL}/pokemon-species/{name}", timeout=self.TIMEOUT
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_evolution_chain(self, name: str) -> dict:
+        """Fetch the evolution chain tree for a Pokémon species by name."""
+        species = self.get_species(name)
+        chain_url = species["evolution_chain"]["url"]
+        response = requests.get(chain_url, timeout=self.TIMEOUT)
+        response.raise_for_status()
+        return response.json()["chain"]
+
 
 def create_api_client() -> "PokeAPIClient | None":
     """Factory to create API client with error handling."""
@@ -168,3 +185,23 @@ def format_types_childfriendly(types: list) -> list:
     """Format types list for children (lowercase English)."""
     # Return lowercase English type names
     return [t.lower() for t in types]
+
+
+def find_next_evolution(chain: dict, name: str) -> "str | None":
+    """Walk a PokeAPI evolution chain tree and return the species name of
+    the stage that follows ``name``.
+
+    Returns ``None`` when ``name`` is the final stage of the chain (or is
+    not present in the chain at all).
+    """
+    name = str(name).strip().lower()
+    queue = [chain]
+    while queue:
+        node = queue.pop(0)
+        evolves_to = node.get("evolves_to") or []
+        if node.get("species", {}).get("name") == name:
+            if evolves_to:
+                return evolves_to[0]["species"]["name"]
+            return None
+        queue.extend(evolves_to)
+    return None

@@ -9,16 +9,17 @@ about:
 """
 from unittest.mock import MagicMock
 
+from ovos_bus_client.session import Session
 from ovos_utils.log import LOG
 from ovoscope import CaptureSession, make_session, make_utterance_message
 from ovoscope.routing import PIPELINE, TALLY, get_prototype_minicroft
 
-from .fixtures import fake_get_pokemon
+from .fixtures import fake_get_evolution_chain, fake_get_pokemon
 
 SKILL_ID = "ovos-skill-pokepedia.openvoiceos"
 SKILL_INTENTS = [f"{SKILL_ID}:{name}" for name in
                  ("get_pokemon_info", "get_pokemon_moves", "get_pokemon_type",
-                  "battle")]
+                  "get_pokemon_evolution", "battle")]
 
 # Both spellings of the "the skill spoke" side effect: ovos-core emits the
 # legacy ``speak`` and/or the renamed ``ovos.utterance.speak`` depending on
@@ -38,23 +39,52 @@ def boot_minicroft(lang: str):
     minicroft = get_prototype_minicroft([SKILL_ID], lang=lang)
     client = MagicMock()
     client.get_pokemon.side_effect = lambda name: fake_get_pokemon(name)
+    client.get_evolution_chain.side_effect = lambda name: fake_get_evolution_chain(name)
     minicroft.plugin_skills[SKILL_ID].instance.api_client = client
     return minicroft
 
 
-def capture(minicroft, utterance: str, lang: str, session_id: str) -> list:
-    """The messages ``utterance`` puts on the bus, routed through ``PIPELINE``."""
-    session = make_session(
+def new_session(lang: str, session_id: str) -> Session:
+    """A session that routes through ``PIPELINE``."""
+    return make_session(
         session_id=session_id,
         pipeline=PIPELINE,
         blacklisted_intents=[],
         blacklisted_skills=[],
         lang=lang,
     )
+
+
+def capture(minicroft, utterance: str, lang: str, session_id: str,
+            session: Session = None) -> list:
+    """The messages ``utterance`` puts on the bus, routed through ``PIPELINE``.
+
+    Pass ``session`` to carry one conversation across turns."""
+    session = session or new_session(lang, session_id)
     message = make_utterance_message(utterance, lang=lang, session=session)
     cap = CaptureSession(minicroft=minicroft)
     cap.capture(message, timeout=15)
     return cap.finish()
+
+
+def session_after(messages, session: Session) -> Session:
+    """The session as the skill handed it back on its newest message.
+
+    A named session keeps no state in ``SessionManager``: it travels by value
+    in ``message.context``. A second turn that shares only the session id
+    starts from an empty context, so a multi-turn test drives the next turn
+    from this session, the way a client folds it back from the reply.
+    """
+    for message in reversed(messages):
+        serialized = (message.context or {}).get("session")
+        if serialized and serialized.get("session_id") == session.session_id:
+            return Session.deserialize(serialized)
+    return session
+
+
+def spoken(messages) -> list:
+    """Every utterance the skill spoke in this capture."""
+    return [m.data.get("utterance", "") for m in messages if m.msg_type in _SPOKE]
 
 
 class IntentRoutingMixin:
