@@ -1,12 +1,12 @@
-chi vince tra {PokemonA} e {PokemonB}
-chi vincerebbe {PokemonA} contro {PokemonB}
-chi è più forte {PokemonA} o {PokemonB}
-chi è più forte tra {PokemonA} e {PokemonB}
-chi è più forte {PokemonA} contro {PokemonB}
-più forte {PokemonA} o {PokemonB}
-{PokemonA} vs {PokemonB}
-{PokemonA} contro {PokemonB}
-battaglia tra {PokemonA} e {PokemonB}
-combattimento tra {PokemonA} e {PokemonB}
-confronta {PokemonA} e {PokemonB}
-{PokemonA} o {PokemonB} chi vince
+chi vince tra {pokemon_a} e {pokemon_b}
+chi vincerebbe {pokemon_a} contro {pokemon_b}
+chi è più forte {pokemon_a} o {pokemon_b}
+chi è più forte tra {pokemon_a} e {pokemon_b}
+chi è più forte {pokemon_a} contro {pokemon_b}
+più forte {pokemon_a} o {pokemon_b}
+{pokemon_a} vs {pokemon_b}
+{pokemon_a} contro {pokemon_b}
+battaglia tra {pokemon_a} e {pokemon_b}
+combattimento tra {pokemon_a} e {pokemon_b}
+confronta {pokemon_a} e {pokemon_b}
+{pokemon_a} o {pokemon_b} chi vince

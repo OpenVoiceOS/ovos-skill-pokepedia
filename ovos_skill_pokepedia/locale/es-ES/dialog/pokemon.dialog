@@ -1,1 +1,1 @@
-{pokemon_name} (número {pokedex_number} en la Pokédex) es un Pokémon de tipo {types}! Tiene {attack_desc}! Es muy {speed_desc}!
+{pokemon_name} número {pokedex_number} en la Pokédex, es un Pokémon de tipo {types}! Tiene {attack_desc}! Es muy {speed_desc}!

@@ -1,0 +1,6 @@
+(tell me [everything]|what do you know) about the pokemon {pokemon}
+(describe|who is|what is) the pokemon {pokemon}
+[give me] (info|information) (on|about) the pokemon {pokemon}
+pokedex entry for {pokemon}
+pokedex [entry] {pokemon}
+pokemon {pokemon}

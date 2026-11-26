@@ -1,0 +1,18 @@
+{
+  "skill_id": "ovos-skill-pokepedia.openvoiceos",
+  "source": "https://github.com/OpenVoiceOS/ovos-skill-pokepedia",
+  "name": "Pokepedia",
+  "description": "Answer questions about Pokemon and compare two of them by type advantage.",
+  "examples": [
+    "who wins between pikachu and charizard",
+    "pokedex entry for pikachu",
+    "what moves does charizard know",
+    "what type is the pokemon pikachu"
+  ],
+  "tags": [
+    "pokemon",
+    "pokeapi",
+    "battle",
+    "entertainment"
+  ]
+}

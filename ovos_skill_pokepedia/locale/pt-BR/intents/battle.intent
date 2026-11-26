@@ -1,0 +1,4 @@
+quem (ganha|ganharia) [entre] {pokemon_a} (e|ou|contra) {pokemon_b}
+quem é mais forte {pokemon_a} (ou|contra) {pokemon_b}
+(batalha|compare) [entre] {pokemon_a} (e|contra) {pokemon_b}
+{pokemon_a} contra {pokemon_b}

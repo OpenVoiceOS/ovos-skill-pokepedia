@@ -1,0 +1,4 @@
+wie (wint|zou winnen) [tussen] {pokemon_a} (en|of|tegen) {pokemon_b}
+wie is sterker {pokemon_a} (of|tegen) {pokemon_b}
+(gevecht|vergelijk) [tussen] {pokemon_a} (en|tegen) {pokemon_b}
+{pokemon_a} tegen {pokemon_b}

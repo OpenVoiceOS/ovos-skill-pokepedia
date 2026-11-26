@@ -1,0 +1,6 @@
+(digue'm [tot]|què saps) sobre el pokemon {pokemon}
+(descriu|qui és|què és) el pokemon {pokemon}
+[dóna'm] (info|informació) sobre el pokemon {pokemon}
+entrada de la pokedex per a {pokemon}
+pokedex [entrada] {pokemon}
+pokemon {pokemon}

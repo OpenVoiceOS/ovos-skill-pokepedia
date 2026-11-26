@@ -1,0 +1,6 @@
+(dime [todo]|que sabes) sobre o pokemon {pokemon}
+(describe|quen é|que é) o pokemon {pokemon}
+[dáme] (info|información) sobre o pokemon {pokemon}
+entrada da pokedex para {pokemon}
+pokedex [entrada] {pokemon}
+pokemon {pokemon}
